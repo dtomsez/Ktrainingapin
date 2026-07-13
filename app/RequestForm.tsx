@@ -192,13 +192,16 @@ export default function RequestForm({ options }: { options: FormOptions }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Hero */}
-      <div className="animate-fade-up py-6 text-center">
-        <h1 className="text-3xl font-bold leading-tight sm:text-4xl">
-          แบบฟอร์ม<span className="gradient-text">การขอจัดประชุม / อบรม</span>
-        </h1>
-        <p className="mx-auto mt-2 max-w-2xl text-lg font-medium text-slate-600">
-          สำหรับพนักงานสายงานเครือข่ายธุรกิจขนาดเล็กและรายย่อย
-        </p>
+      <div className="hero-mascot animate-fade-up py-10 text-center">
+        <div className="hero-mascot-img" aria-hidden />
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold leading-tight sm:text-4xl">
+            แบบฟอร์ม<span className="gradient-text">การขอจัดประชุม / อบรม</span>
+          </h1>
+          <p className="mx-auto mt-2 max-w-2xl text-lg font-medium text-slate-600">
+            สำหรับพนักงานสายงานเครือข่ายธุรกิจขนาดเล็กและรายย่อย
+          </p>
+        </div>
       </div>
 
       {error && (
