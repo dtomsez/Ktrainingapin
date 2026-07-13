@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma db push --skip-generate && prisma db seed && next build",
+    "vercel-build": "DATABASE_URL=file:./dev.db prisma db push --skip-generate && DATABASE_URL=file:./dev.db prisma db seed && next build",
     "start": "next start",
     "lint": "next lint",
     "db:push": "prisma db push",
