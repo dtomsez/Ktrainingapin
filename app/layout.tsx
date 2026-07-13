@@ -22,11 +22,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="orb orb-a animate-float h-96 w-96" style={{ top: "-8rem", left: "-8rem" }} aria-hidden />
         <div className="orb orb-b animate-float h-96 w-96" style={{ top: "30%", right: "-10rem", animationDelay: "-3s" }} aria-hidden />
         <div className="orb orb-c animate-float h-80 w-80" style={{ bottom: "-6rem", left: "35%", animationDelay: "-6s" }} aria-hidden />
+        {/* มาสคอตน้องนกกรุงไทย จาง ๆ เป็นลายน้ำ */}
+        <div className="mascot-watermark" aria-hidden />
 
         <header className="glass sticky top-0 z-50">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
             <Link href="/" className="group flex max-w-md items-center gap-2 font-bold">
-              <span className="inline-block text-lg transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110">🎓</span>
+              <span className="mascot-badge inline-block h-8 w-8 shrink-0 rounded-full shadow-sm ring-2 ring-white/70 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" aria-hidden />
               <span className="gradient-text text-sm leading-snug">
                 แบบฟอร์มการขอจัดประชุม/อบรม สำหรับพนักงานสายงานเครือข่ายธุรกิจขนาดเล็กและรายย่อย
               </span>

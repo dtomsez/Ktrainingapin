@@ -352,3 +352,31 @@ body {
 .event-pill {
   @apply block cursor-pointer rounded-lg px-1.5 py-1 leading-tight transition-all duration-200 hover:z-10 hover:scale-[1.06] hover:shadow-lg;
 }
+
+/* ===== มาสคอตน้องนกกรุงไทย ===== */
+/* Watermark จาง ๆ มุมล่างขวา ทุกหน้า — ขอบภาพเฟดด้วย mask ให้กลืนพื้นหลัง */
+.mascot-watermark {
+  position: fixed;
+  right: -2.5rem;
+  bottom: -2.5rem;
+  width: min(360px, 32vw);
+  aspect-ratio: 1;
+  background: url(/mascot-bird.jpg) center 45% / contain no-repeat;
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: -1;
+  -webkit-mask-image: radial-gradient(circle at 50% 45%, #000 52%, transparent 72%);
+  mask-image: radial-gradient(circle at 50% 45%, #000 52%, transparent 72%);
+  animation: float 8s ease-in-out infinite;
+}
+@media (max-width: 640px) {
+  .mascot-watermark { display: none; }
+}
+
+/* โลโก้น้องนกทรงกลมในหัวเว็บ / การ์ด (โฟกัสใบหน้า) */
+.mascot-badge {
+  background-image: url(/mascot-bird.jpg);
+  background-repeat: no-repeat;
+  background-position: 50% 22%;
+  background-size: 150%;
+}

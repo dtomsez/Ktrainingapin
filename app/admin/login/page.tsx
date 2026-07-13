@@ -11,9 +11,7 @@ export default function AdminLoginPage() {
       <div className="card animate-pop-in relative overflow-hidden">
         <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sky-500 via-blue-600 to-blue-900" />
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-700 text-2xl shadow-lg shadow-sky-500/40 transition-transform duration-300 hover:rotate-6 hover:scale-105">
-            🔐
-          </div>
+          <div className="mascot-badge mx-auto mb-3 h-16 w-16 rounded-2xl shadow-lg shadow-sky-500/40 ring-2 ring-white transition-transform duration-300 hover:rotate-6 hover:scale-105" aria-hidden />
           <h1 className="text-xl font-bold">สำหรับผู้อนุมัติ</h1>
           <p className="mt-1 text-sm text-slate-500">กรุณาใส่รหัสผ่านเพื่อเข้าใช้งาน</p>
         </div>
