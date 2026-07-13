@@ -1,0 +1,354 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  /* โทนสีธนาคารกรุงไทย: ฟ้า Krungthai Blue ไล่ไปน้ำเงินเข้ม */
+  --grad-a: #00a9e0; /* Krungthai light blue */
+  --grad-b: #0077c8; /* Krungthai blue */
+  --grad-c: #003f87; /* Krungthai navy */
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--grad-b) 25%, transparent);
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--grad-a), var(--grad-b));
+  border-radius: 8px;
+  border: 2px solid #f8fafc;
+}
+
+/* ===== Keyframes ===== */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  60% {
+    transform: scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) translateX(0);
+  }
+  50% {
+    transform: translateY(-22px) translateX(12px);
+  }
+}
+
+@keyframes gradient-x {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes shine {
+  from {
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  to {
+    transform: translateX(240%) skewX(-18deg);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  75% {
+    transform: rotate(10deg);
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translateY(-10px) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(240px) rotate(540deg);
+  }
+}
+
+@keyframes draw-check {
+  from {
+    stroke-dashoffset: 48;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ===== Animation utilities ===== */
+.animate-fade-up {
+  animation: fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-pop-in {
+  animation: pop-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-float {
+  animation: float 9s ease-in-out infinite;
+}
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+.animate-wiggle {
+  animation: wiggle 0.8s ease-in-out infinite;
+}
+.delay-1 {
+  animation-delay: 0.08s;
+}
+.delay-2 {
+  animation-delay: 0.16s;
+}
+.delay-3 {
+  animation-delay: 0.24s;
+}
+.delay-4 {
+  animation-delay: 0.32s;
+}
+.delay-5 {
+  animation-delay: 0.4s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== Decorative ===== */
+/* ใช้ radial-gradient แทน filter: blur เพื่อเลี่ยงบั๊ก GPU compositing ที่ทำให้จอขาวบนบางเครื่อง */
+.orb {
+  position: fixed;
+  border-radius: 9999px;
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.orb-a {
+  background: radial-gradient(circle, rgba(0, 169, 224, 0.4) 0%, rgba(0, 169, 224, 0) 70%);
+}
+
+.orb-b {
+  background: radial-gradient(circle, rgba(103, 232, 249, 0.45) 0%, rgba(103, 232, 249, 0) 70%);
+}
+
+.orb-c {
+  background: radial-gradient(circle, rgba(0, 119, 200, 0.35) 0%, rgba(0, 119, 200, 0) 70%);
+}
+
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-image: radial-gradient(circle, rgba(0, 119, 200, 0.15) 1px, transparent 1px);
+  background-size: 26px 26px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 70%);
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, var(--grad-a), var(--grad-b), var(--grad-c), var(--grad-a));
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-x 7s ease infinite;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* ===== Components ===== */
+.card {
+  @apply relative rounded-2xl border border-slate-200/70 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_8px_24px_-12px_rgba(79,70,229,0.12)] transition-all duration-300;
+}
+
+.card-hover {
+  @apply hover:-translate-y-1 hover:border-sky-200 hover:shadow-[0_2px_4px_rgba(15,23,42,0.06),0_18px_40px_-14px_rgba(79,70,229,0.28)];
+}
+
+.field-label {
+  @apply mb-1.5 block text-sm font-medium text-slate-700;
+}
+
+.field-input {
+  @apply w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm shadow-sm transition-all duration-200 focus:border-sky-500 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.15)] focus:outline-none hover:border-slate-400;
+}
+
+.btn-primary {
+  @apply relative inline-flex cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-sky-500/40 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50;
+  background: linear-gradient(120deg, var(--grad-a), var(--grad-b) 55%, var(--grad-c));
+  background-size: 180% 100%;
+}
+
+.btn-primary:hover {
+  background-position: 90% 0;
+}
+
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  transform: translateX(-120%) skewX(-18deg);
+}
+
+.btn-primary:hover::after {
+  animation: shine 0.9s ease;
+}
+
+.btn-success {
+  background: linear-gradient(120deg, #059669, #10b981);
+  @apply shadow-emerald-500/30 hover:shadow-emerald-500/40;
+}
+
+.btn-danger {
+  background: linear-gradient(120deg, #dc2626, #f43f5e);
+  @apply shadow-rose-500/30 hover:shadow-rose-500/40;
+}
+
+.btn-secondary {
+  @apply inline-flex cursor-pointer items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-300 hover:text-sky-700 hover:shadow-md active:scale-[0.97];
+}
+
+.section-badge {
+  @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white shadow-md shadow-sky-500/30;
+  background: linear-gradient(135deg, var(--grad-a), var(--grad-b));
+}
+
+.chip {
+  @apply inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-medium text-slate-600 shadow-sm;
+}
+
+.overlap-day {
+  animation: pulse-ring 2.2s ease-out infinite;
+}
+
+.nav-link {
+  @apply relative py-1 transition-colors duration-200 hover:text-sky-700;
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 2px;
+  width: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--grad-a), var(--grad-c));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
+}
+
+.nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+.check-draw {
+  stroke-dasharray: 48;
+  animation: draw-check 0.7s 0.25s ease forwards;
+  stroke-dashoffset: 48;
+}
+
+.confetti {
+  position: absolute;
+  top: 0;
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  animation: confetti-fall 1.8s ease-in forwards;
+}
+
+.timeline-bar {
+  transform-origin: top;
+  animation: bar-grow 0.8s ease both;
+}
+
+.event-pill {
+  @apply block cursor-pointer rounded-lg px-1.5 py-1 leading-tight transition-all duration-200 hover:z-10 hover:scale-[1.06] hover:shadow-lg;
+}

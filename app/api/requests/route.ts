@@ -1,0 +1,105 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
+import { calcSlotHours } from "@/lib/hours";
+import { notifyApprover } from "@/lib/email";
+
+const slotSchema = z.object({
+  startDate: z.string().min(1),
+  endDate: z.string().min(1),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/),
+  deductLunch: z.boolean(),
+});
+
+const requestSchema = z.object({
+  employeeId: z.string().min(1, "กรุณากรอกรหัสพนักงาน"),
+  requesterName: z.string().min(1, "กรุณากรอกชื่อ-นามสกุล"),
+  businessLine: z.string().min(1, "กรุณาเลือกสังกัดสายงาน"),
+  department: z.string().min(1, "กรุณาเลือกสำนักงานเขต/ทีมขึ้นตรงสายงานเครือข่ายฯ/สำนักงานใหญ่"),
+  networkGroup: z.string().min(1, "กรุณาเลือกกลุ่มเครือข่าย/สำนักงานภาค/ทีมขึ้นตรงสายงานเครือข่ายฯ/สำนักงานใหญ่"),
+  position: z.string().min(1, "กรุณากรอกตำแหน่ง"),
+  phone: z.string().min(1, "กรุณากรอกเบอร์ติดต่อ"),
+  courseName: z.string().min(1, "กรุณากรอกชื่อหลักสูตร"),
+  courseType: z.enum(["ONLINE", "ONSITE"]),
+  objective: z.string().min(1, "กรุณากรอกวัตถุประสงค์ในการขอจัดประชุม/อบรม"),
+  participants: z.coerce.number().int().min(1, "จำนวนผู้เข้าประชุม/อบรมต้องมากกว่า 0"),
+  expectedResult: z.string().min(1, "กรุณากรอกผลที่คาดว่าจะได้รับ"),
+  traineePositions: z
+    .array(z.string().min(1))
+    .min(1, "กรุณาเลือกตำแหน่งผู้เข้ารับการประชุม/อบรมอย่างน้อย 1 ตำแหน่ง"),
+  slots: z.array(slotSchema).min(1, "ต้องเสนอวันที่อย่างน้อย 1 ทางเลือก").max(2),
+});
+
+async function nextRequestNo(): Promise<string> {
+  const year = new Date().getFullYear();
+  const prefix = `TR-${year}-`;
+  const last = await prisma.trainingRequest.findFirst({
+    where: { requestNo: { startsWith: prefix } },
+    orderBy: { id: "desc" },
+  });
+  const lastNo = last ? Number(last.requestNo.slice(prefix.length)) : 0;
+  return `${prefix}${String(lastNo + 1).padStart(4, "0")}`;
+}
+
+export async function POST(req: Request) {
+  const body = await req.json().catch(() => null);
+  const parsed = requestSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "ข้อมูลไม่ถูกต้อง" },
+      { status: 400 }
+    );
+  }
+  const data = parsed.data;
+
+  const slotRows = [];
+  for (const [i, s] of data.slots.entries()) {
+    const calc = calcSlotHours(s);
+    if (!calc) {
+      return NextResponse.json(
+        { error: `ทางเลือกที่ ${i + 1}: วันที่/เวลาไม่ถูกต้อง (เวลาเลิกต้องหลังเวลาเริ่ม)` },
+        { status: 400 }
+      );
+    }
+    slotRows.push({
+      slotNo: i + 1,
+      startDate: new Date(s.startDate),
+      endDate: new Date(s.endDate),
+      startTime: s.startTime,
+      endTime: s.endTime,
+      deductLunch: s.deductLunch,
+      totalHours: calc.totalHours,
+    });
+  }
+
+  const requestNo = await nextRequestNo();
+  const created = await prisma.trainingRequest.create({
+    data: {
+      requestNo,
+      employeeId: data.employeeId,
+      requesterName: data.requesterName,
+      businessLine: data.businessLine,
+      department: data.department,
+      networkGroup: data.networkGroup,
+      position: data.position,
+      phone: data.phone,
+      traineePositions: JSON.stringify(data.traineePositions),
+      courseName: data.courseName,
+      courseType: data.courseType,
+      objective: data.objective,
+      participants: data.participants,
+      expectedResult: data.expectedResult,
+      slots: { create: slotRows },
+    },
+  });
+
+  const approver1 = await prisma.approver.findUnique({ where: { stepOrder: 1 } });
+  try {
+    if (approver1) await notifyApprover(approver1, created);
+  } catch (e) {
+    console.error("Email sending failed:", e);
+  }
+
+  return NextResponse.json({ requestNo: created.requestNo });
+}

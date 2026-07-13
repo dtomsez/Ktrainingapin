@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Approver {
+  id           Int              @id @default(autoincrement())
+  name         String
+  email        String           @unique
+  passwordHash String
+  stepOrder    Int              @unique // 1..3
+  actions      ApprovalAction[]
+}
+
+// ตัวเลือก dropdown ทุกชุด จัดการได้จากหน้า Data Control
+// category: BUSINESS_LINE (สังกัดสายงาน) | DISTRICT (สำนักงานเขต) | NETWORK_GROUP (กลุ่มเครือข่าย/สำนักภาค) | POSITION (ตำแหน่งผู้เข้าอบรม)
+model OptionItem {
+  id       Int    @id @default(autoincrement())
+  category String
+  name     String
+
+  @@unique([category, name])
+}
+
+model TrainingRequest {
+  id             Int              @id @default(autoincrement())
+  requestNo      String           @unique // TR-2026-0001
+  employeeId     String           @default("")
+  requesterName  String
+  businessLine   String           @default("") // สังกัดสายงาน
+  department     String // สำนักงานเขต
+  networkGroup   String           @default("") // กลุ่มเครือข่าย/สำนักภาค
+  position       String
+  // ตำแหน่งผู้เข้ารับการอบรม/ประชุม เก็บเป็น JSON array ของชื่อตำแหน่ง
+  traineePositions String         @default("[]")
+  phone          String
+  courseName     String
+  courseType     String // ONLINE | ONSITE
+  objective      String
+  participants   Int
+  expectedResult String
+  // PENDING_1 | PENDING_2 | PENDING_3 | APPROVED | REJECTED
+  status         String           @default("PENDING_1")
+  selectedSlotId Int?             @unique
+  selectedSlot   DateSlot?        @relation("SelectedSlot", fields: [selectedSlotId], references: [id])
+  slots          DateSlot[]       @relation("RequestSlots")
+  actions        ApprovalAction[]
+  createdAt      DateTime         @default(now())
+}
+
+model DateSlot {
+  id          Int              @id @default(autoincrement())
+  request     TrainingRequest  @relation("RequestSlots", fields: [requestId], references: [id], onDelete: Cascade)
+  requestId   Int
+  slotNo      Int // 1..3
+  startDate   DateTime
+  endDate     DateTime
+  startTime   String // "09:00"
+  endTime     String // "16:00"
+  deductLunch Boolean          @default(true)
+  totalHours  Float
+  selectedBy  TrainingRequest? @relation("SelectedSlot")
+
+  @@unique([requestId, slotNo])
+}
+
+model ApprovalAction {
+  id         Int             @id @default(autoincrement())
+  request    TrainingRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  requestId  Int
+  approver   Approver        @relation(fields: [approverId], references: [id])
+  approverId Int
+  step       Int
+  decision   String // APPROVE | REJECT
+  comment    String?
+  decidedAt  DateTime        @default(now())
+
+  @@unique([requestId, step])
+}
