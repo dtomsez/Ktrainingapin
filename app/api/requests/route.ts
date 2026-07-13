@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { createRequest } from "@/lib/db";
+import { approverByStep } from "@/lib/approvers";
 import { calcSlotHours } from "@/lib/hours";
 import { notifyApprover } from "@/lib/email";
+import { logEvent } from "@/lib/log";
 
 const slotSchema = z.object({
   startDate: z.string().min(1),
@@ -31,17 +33,6 @@ const requestSchema = z.object({
   slots: z.array(slotSchema).min(1, "ต้องเสนอวันที่อย่างน้อย 1 ทางเลือก").max(2),
 });
 
-async function nextRequestNo(): Promise<string> {
-  const year = new Date().getFullYear();
-  const prefix = `TR-${year}-`;
-  const last = await prisma.trainingRequest.findFirst({
-    where: { requestNo: { startsWith: prefix } },
-    orderBy: { id: "desc" },
-  });
-  const lastNo = last ? Number(last.requestNo.slice(prefix.length)) : 0;
-  return `${prefix}${String(lastNo + 1).padStart(4, "0")}`;
-}
-
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const parsed = requestSchema.safeParse(body);
@@ -63,7 +54,6 @@ export async function POST(req: Request) {
       );
     }
     slotRows.push({
-      slotNo: i + 1,
       startDate: new Date(s.startDate),
       endDate: new Date(s.endDate),
       startTime: s.startTime,
@@ -73,30 +63,38 @@ export async function POST(req: Request) {
     });
   }
 
-  const requestNo = await nextRequestNo();
-  const created = await prisma.trainingRequest.create({
-    data: {
-      requestNo,
-      employeeId: data.employeeId,
-      requesterName: data.requesterName,
-      businessLine: data.businessLine,
-      department: data.department,
-      networkGroup: data.networkGroup,
-      position: data.position,
-      phone: data.phone,
-      traineePositions: JSON.stringify(data.traineePositions),
-      courseName: data.courseName,
-      courseType: data.courseType,
-      objective: data.objective,
-      participants: data.participants,
-      expectedResult: data.expectedResult,
-      slots: { create: slotRows },
-    },
+  const created = await createRequest({
+    employeeId: data.employeeId,
+    requesterName: data.requesterName,
+    businessLine: data.businessLine,
+    department: data.department,
+    networkGroup: data.networkGroup,
+    position: data.position,
+    phone: data.phone,
+    traineePositions: data.traineePositions,
+    courseName: data.courseName,
+    courseType: data.courseType,
+    objective: data.objective,
+    participants: data.participants,
+    expectedResult: data.expectedResult,
+    slots: slotRows,
   });
 
-  const approver1 = await prisma.approver.findUnique({ where: { stepOrder: 1 } });
+  await logEvent("SUBMIT", {
+    requestNo: created.requestNo,
+    detail: `${data.requesterName} · ${data.courseName}`,
+  });
+
+  const approver1 = approverByStep(1);
   try {
-    if (approver1) await notifyApprover(approver1, created);
+    if (approver1) {
+      await notifyApprover(approver1, {
+        requestNo: created.requestNo,
+        courseName: data.courseName,
+        requesterName: data.requesterName,
+        id: created.id,
+      });
+    }
   } catch (e) {
     console.error("Email sending failed:", e);
   }

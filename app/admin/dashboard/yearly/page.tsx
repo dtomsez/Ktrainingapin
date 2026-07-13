@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { loadAllRequests } from "@/lib/db";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logEvent } from "@/lib/log";
 import { buildMonthEvents, summarizeMonth, THAI_MONTHS } from "@/lib/dashboard";
 import AdminNav from "../../AdminNav";
 import CountUp from "../CountUp";
@@ -14,14 +15,12 @@ export default async function YearlyDashboardPage({
   searchParams: Promise<{ y?: string }>;
 }) {
   await requireAdmin();
+  await logEvent("VIEW_DASHBOARD", { actor: "ผู้อนุมัติ", detail: "รายปี" });
   const { y } = await searchParams;
   const year = y && /^\d{4}$/.test(y) ? Number(y) : new Date().getFullYear();
   const thaiYear = year + 543;
 
-  const requests = await prisma.trainingRequest.findMany({
-    where: { status: { not: "REJECTED" } },
-    include: { slots: true },
-  });
+  const requests = (await loadAllRequests()).filter((r) => r.status !== "REJECTED");
 
   // สรุปทั้ง 12 เดือนของปี
   const months = Array.from({ length: 12 }, (_, i) => {

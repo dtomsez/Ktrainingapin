@@ -1,4 +1,4 @@
-import type { TrainingRequest, DateSlot } from "@prisma/client";
+import type { TrainingRequest, DateSlot } from "@/lib/db";
 import { effectiveSlots } from "@/lib/overlap";
 import { parsePositions } from "@/lib/labels";
 

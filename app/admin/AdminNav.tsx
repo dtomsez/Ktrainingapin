@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { logoutAdmin } from "./login/actions";
 
-export default function AdminNav({ active }: { active: "queue" | "dashboard" | "data" }) {
+export default function AdminNav({ active }: { active: "queue" | "dashboard" | "data" | "logs" }) {
   const tabClass = (isActive: boolean) =>
     isActive
       ? "rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-500/30 bg-gradient-to-r from-sky-600 to-blue-700 transition-all duration-200"
@@ -18,6 +18,9 @@ export default function AdminNav({ active }: { active: "queue" | "dashboard" | "
         </Link>
         <Link href="/admin/data-control" className={tabClass(active === "data")}>
           ⚙️ Data Control
+        </Link>
+        <Link href="/admin/logs" className={tabClass(active === "logs")}>
+          🧾 Log
         </Link>
       </div>
       <div className="flex items-center gap-3">

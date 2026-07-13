@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
-import { prisma } from "@/lib/prisma";
+import { loadAllRequests } from "@/lib/db";
 import { isAdmin } from "@/lib/adminAuth";
+import { logEvent } from "@/lib/log";
 import { STATUS_LABELS, COURSE_TYPE_LABELS, parsePositions, formatDateRange } from "@/lib/labels";
 
 export const dynamic = "force-dynamic";
@@ -12,14 +13,8 @@ export async function GET(req: Request) {
     return NextResponse.redirect(new URL("/admin/login", req.url));
   }
 
-  const requests = await prisma.trainingRequest.findMany({
-    include: {
-      slots: { orderBy: { slotNo: "asc" } },
-      selectedSlot: true,
-      actions: { include: { approver: true }, orderBy: { step: "asc" } },
-    },
-    orderBy: { id: "asc" },
-  });
+  const requests = (await loadAllRequests()).sort((a, b) => a.id - b.id);
+  await logEvent("EXPORT", { actor: "ผู้อนุมัติ", detail: `${requests.length} คำขอ` });
 
   const wb = new ExcelJS.Workbook();
   wb.creator = "ระบบขอจัดประชุม/อบรม";

@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { loadAllRequests } from "@/lib/db";
 import { timeToMinutes } from "@/lib/hours";
 
 export interface SlotLike {
@@ -55,17 +55,12 @@ export function effectiveSlots<T extends SlotLike>(req: RequestWithSlots<T>): T[
 
 // หาว่า slot แต่ละอันของคำขอนี้ ชนกับคำขออื่น (ที่ยังไม่ถูกปฏิเสธ) อันไหนบ้าง
 export async function findOverlaps(requestId: number): Promise<Map<number, OverlapHit[]>> {
-  const target = await prisma.trainingRequest.findUnique({
-    where: { id: requestId },
-    include: { slots: true },
-  });
+  const all = await loadAllRequests();
+  const target = all.find((r) => r.id === requestId);
   const result = new Map<number, OverlapHit[]>();
   if (!target) return result;
 
-  const others = await prisma.trainingRequest.findMany({
-    where: { id: { not: requestId }, status: { not: "REJECTED" } },
-    include: { slots: true },
-  });
+  const others = all.filter((r) => r.id !== requestId && r.status !== "REJECTED");
 
   for (const slot of effectiveSlots(target)) {
     const hits: OverlapHit[] = [];

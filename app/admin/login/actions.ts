@@ -3,12 +3,15 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ADMIN_COOKIE, adminToken, adminPassword } from "@/lib/adminAuth";
+import { logEvent } from "@/lib/log";
 
 export async function loginAdmin(_prev: { error?: string } | undefined, formData: FormData) {
   const password = String(formData.get("password") ?? "");
   if (password !== adminPassword()) {
+    await logEvent("LOGIN_FAIL");
     return { error: "รหัสผ่านไม่ถูกต้อง" };
   }
+  await logEvent("LOGIN_SUCCESS");
   const cookieStore = await cookies();
   cookieStore.set(ADMIN_COOKIE, adminToken(), {
     httpOnly: true,

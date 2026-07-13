@@ -1,4 +1,5 @@
-import { prisma } from "@/lib/prisma";
+import { getRequestByNo } from "@/lib/db";
+import { logEvent } from "@/lib/log";
 import { STATUS_LABELS, STATUS_COLORS, COURSE_TYPE_LABELS, pendingStep, parsePositions, formatDateRange } from "@/lib/labels";
 
 export const dynamic = "force-dynamic";
@@ -9,16 +10,11 @@ export default async function TrackPage({
   searchParams: Promise<{ no?: string }>;
 }) {
   const { no } = await searchParams;
-  const request = no
-    ? await prisma.trainingRequest.findUnique({
-        where: { requestNo: no.trim().toUpperCase() },
-        include: {
-          slots: { orderBy: { slotNo: "asc" } },
-          selectedSlot: true,
-          actions: { include: { approver: true }, orderBy: { step: "asc" } },
-        },
-      })
-    : null;
+  const query = no?.trim().toUpperCase();
+  const request = query ? await getRequestByNo(query) : null;
+  if (query) {
+    await logEvent("TRACK", { requestNo: query, detail: request ? "พบคำขอ" : "ไม่พบคำขอ" });
+  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">

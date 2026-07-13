@@ -1,5 +1,6 @@
-import { prisma } from "@/lib/prisma";
+import { getOptions, loadAllRequests } from "@/lib/db";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logEvent } from "@/lib/log";
 import { parsePositions, OPTION_CATEGORIES } from "@/lib/labels";
 import AdminNav from "../AdminNav";
 import AddOptionForm from "./AddOptionForm";
@@ -9,10 +10,9 @@ export const dynamic = "force-dynamic";
 
 export default async function DataControlPage() {
   await requireAdmin();
-  const items = await prisma.optionItem.findMany({ orderBy: { id: "asc" } });
-  const requests = await prisma.trainingRequest.findMany({
-    select: { traineePositions: true, businessLine: true, department: true, networkGroup: true },
-  });
+  await logEvent("VIEW_DATACONTROL", { actor: "ผู้อนุมัติ" });
+  const items = await getOptions();
+  const requests = await loadAllRequests();
 
   // นับการใช้งานของแต่ละตัวเลือก เพื่อบอกผลกระทบก่อนลบ
   const usage = new Map<string, number>(); // key = category|name

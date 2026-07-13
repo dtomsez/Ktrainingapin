@@ -2,10 +2,12 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
+import { getRequestById, updateRequest, createAction } from "@/lib/db";
+import { approverByStep } from "@/lib/approvers";
 import { pendingStep } from "@/lib/labels";
 import { notifyApprover } from "@/lib/email";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logEvent } from "@/lib/log";
 
 // ผู้อนุมัติของขั้นปัจจุบันอิงจากสถานะคำขอ — เข้าถึงได้เฉพาะผู้ที่ใส่รหัสผ่านแล้วเท่านั้น
 export async function decide(_prev: { error?: string } | undefined, formData: FormData) {
@@ -15,26 +17,24 @@ export async function decide(_prev: { error?: string } | undefined, formData: Fo
   const comment = String(formData.get("comment") ?? "").trim();
   const slotId = formData.get("slotId") ? Number(formData.get("slotId")) : null;
 
-  const request = await prisma.trainingRequest.findUnique({
-    where: { id: requestId },
-    include: { slots: true },
-  });
+  const request = await getRequestById(requestId);
   if (!request) return { error: "ไม่พบคำขอ" };
 
   const step = pendingStep(request.status);
   if (!step) return { error: "คำขอนี้ถูกพิจารณาเสร็จสิ้นแล้ว" };
 
-  const approver = await prisma.approver.findUnique({ where: { stepOrder: step } });
+  const approver = approverByStep(step);
   if (!approver) return { error: `ไม่พบข้อมูลผู้อนุมัติท่านที่ ${step}` };
 
   if (decision === "REJECT") {
     if (!comment) return { error: "กรุณาระบุเหตุผลในการปฏิเสธ" };
-    await prisma.$transaction([
-      prisma.trainingRequest.update({ where: { id: requestId }, data: { status: "REJECTED" } }),
-      prisma.approvalAction.create({
-        data: { requestId, approverId: approver.id, step, decision: "REJECT", comment },
-      }),
-    ]);
+    await updateRequest(requestId, { status: "REJECTED" });
+    await createAction({ requestId, approverId: approver.id, step, decision: "REJECT", comment });
+    await logEvent("REJECT", {
+      actor: approver.name,
+      requestNo: request.requestNo,
+      detail: `ขั้นที่ ${step} · ${comment}`,
+    });
   } else if (decision === "APPROVE") {
     let selectedSlotId = request.selectedSlotId;
     if (step === 1) {
@@ -44,25 +44,30 @@ export async function decide(_prev: { error?: string } | undefined, formData: Fo
       selectedSlotId = slotId;
     }
     const nextStatus = step === 3 ? "APPROVED" : `PENDING_${step + 1}`;
-    await prisma.$transaction([
-      prisma.trainingRequest.update({
-        where: { id: requestId },
-        data: { status: nextStatus, selectedSlotId },
-      }),
-      prisma.approvalAction.create({
-        data: {
-          requestId,
-          approverId: approver.id,
-          step,
-          decision: "APPROVE",
-          comment: comment || null,
-        },
-      }),
-    ]);
+    await updateRequest(requestId, { status: nextStatus, selectedSlotId });
+    await createAction({
+      requestId,
+      approverId: approver.id,
+      step,
+      decision: "APPROVE",
+      comment: comment || null,
+    });
+    await logEvent("APPROVE", {
+      actor: approver.name,
+      requestNo: request.requestNo,
+      detail: step === 3 ? "อนุมัติครบ 3 ขั้น" : `ขั้นที่ ${step} → ส่งต่อขั้นที่ ${step + 1}`,
+    });
     try {
       if (step < 3) {
-        const next = await prisma.approver.findUnique({ where: { stepOrder: step + 1 } });
-        if (next) await notifyApprover(next, request);
+        const next = approverByStep(step + 1);
+        if (next) {
+          await notifyApprover(next, {
+            requestNo: request.requestNo,
+            courseName: request.courseName,
+            requesterName: request.requesterName,
+            id: request.id,
+          });
+        }
       }
     } catch (e) {
       console.error("Email sending failed:", e);

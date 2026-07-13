@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { getRequestById } from "@/lib/db";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logEvent } from "@/lib/log";
 import { findOverlaps } from "@/lib/overlap";
 import {
   STATUS_LABELS,
@@ -22,15 +23,9 @@ export default async function RequestDetailPage({
 }) {
   await requireAdmin();
   const { id } = await params;
-  const request = await prisma.trainingRequest.findUnique({
-    where: { id: Number(id) },
-    include: {
-      slots: { orderBy: { slotNo: "asc" } },
-      selectedSlot: true,
-      actions: { include: { approver: true }, orderBy: { step: "asc" } },
-    },
-  });
+  const request = await getRequestById(Number(id));
   if (!request) notFound();
+  await logEvent("VIEW_REQUEST", { actor: "ผู้อนุมัติ", requestNo: request.requestNo });
 
   const overlaps = await findOverlaps(request.id);
   const step = pendingStep(request.status);

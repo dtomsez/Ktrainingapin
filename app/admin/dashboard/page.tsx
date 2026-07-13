@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { loadAllRequests } from "@/lib/db";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logEvent } from "@/lib/log";
 import { timeToMinutes } from "@/lib/hours";
 import { effectiveSlots } from "@/lib/overlap";
 import { STATUS_LABELS } from "@/lib/labels";
@@ -17,6 +18,7 @@ export default async function DashboardPage({
   searchParams: Promise<{ m?: string }>;
 }) {
   await requireAdmin();
+  await logEvent("VIEW_DASHBOARD", { actor: "ผู้อนุมัติ", detail: "รายเดือน" });
   const { m } = await searchParams;
 
   const now = new Date();
@@ -28,7 +30,7 @@ export default async function DashboardPage({
   const monthEnd = new Date(year, month, 0); // last day of month
   const daysInMonth = monthEnd.getDate();
 
-  const allRequests = await prisma.trainingRequest.findMany({ include: { slots: true } });
+  const allRequests = await loadAllRequests();
   const requests = allRequests.filter((r) => r.status !== "REJECTED");
 
   const byDay = buildMonthEvents(requests, year, month);

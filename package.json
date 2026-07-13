@@ -5,17 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postinstall": "prisma generate",
-    "vercel-build": "DATABASE_URL=file:./dev.db prisma db push --skip-generate && DATABASE_URL=file:./dev.db prisma db seed && next build",
     "start": "next start",
-    "lint": "next lint",
-    "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.ts"
+    "lint": "next lint"
   },
   "dependencies": {
-    "@prisma/client": "^6.10.0",
-    "bcryptjs": "^3.0.2",
     "exceljs": "^4.4.0",
+    "google-auth-library": "^9.15.0",
     "next": "^15.3.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -27,12 +22,7 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "prisma": "^6.10.0",
     "tailwindcss": "^4.1.10",
-    "tsx": "^4.20.3",
     "typescript": "^5"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
   }
 }

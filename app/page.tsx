@@ -1,10 +1,10 @@
-import { prisma } from "@/lib/prisma";
+import { getOptions } from "@/lib/db";
 import RequestForm from "./RequestForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const items = await prisma.optionItem.findMany({ orderBy: { id: "asc" } });
+  const items = await getOptions();
   const byCategory = (c: string) => items.filter((i) => i.category === c).map((i) => i.name);
 
   return (

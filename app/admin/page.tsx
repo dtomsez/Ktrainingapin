@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { loadAllRequests } from "@/lib/db";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logEvent } from "@/lib/log";
 import { STATUS_LABELS, STATUS_COLORS, formatDateRange } from "@/lib/labels";
 import AdminNav from "./AdminNav";
 
@@ -8,18 +9,16 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminQueuePage() {
   await requireAdmin();
-  const pending = await prisma.trainingRequest.findMany({
-    where: { status: { in: ["PENDING_1", "PENDING_2", "PENDING_3"] } },
-    include: { slots: { orderBy: { slotNo: "asc" } }, selectedSlot: true },
-    orderBy: { createdAt: "asc" },
-  });
+  await logEvent("VIEW_QUEUE", { actor: "ผู้อนุมัติ" });
+  const all = await loadAllRequests();
+  const pending = all
+    .filter((r) => r.status.startsWith("PENDING"))
+    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
-  const finished = await prisma.trainingRequest.findMany({
-    where: { status: { in: ["APPROVED", "REJECTED"] } },
-    include: { selectedSlot: true },
-    orderBy: { createdAt: "desc" },
-    take: 30,
-  });
+  const finished = all
+    .filter((r) => r.status === "APPROVED" || r.status === "REJECTED")
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .slice(0, 30);
 
   return (
     <div>
