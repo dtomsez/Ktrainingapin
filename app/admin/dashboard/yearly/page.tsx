@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { loadAllRequests } from "@/lib/db";
 import { requireAdmin } from "@/lib/adminAuth";
+import { approverByStep } from "@/lib/approvers";
 import { logEvent } from "@/lib/log";
 import { buildMonthEvents, summarizeMonth, THAI_MONTHS } from "@/lib/dashboard";
 import AdminNav from "../../AdminNav";
@@ -14,8 +15,8 @@ export default async function YearlyDashboardPage({
 }: {
   searchParams: Promise<{ y?: string }>;
 }) {
-  await requireAdmin();
-  await logEvent("VIEW_DASHBOARD", { actor: "ผู้อนุมัติ", detail: "รายปี" });
+  const level = await requireAdmin();
+  await logEvent("VIEW_DASHBOARD", { actor: approverByStep(level)?.name, detail: "รายปี" });
   const { y } = await searchParams;
   const year = y && /^\d{4}$/.test(y) ? Number(y) : new Date().getFullYear();
   const thaiYear = year + 543;

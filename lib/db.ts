@@ -1,5 +1,5 @@
 import * as store from "./store";
-import { approverById, type Approver } from "./approvers";
+import { approverById, approverByStep, type Approver } from "./approvers";
 
 // ชั้นข้อมูลระดับโดเมน — ประกอบข้อมูลจากตาราง Google Sheets ให้เป็น object แบบที่หน้าเว็บใช้
 // (แทนที่ Prisma client เดิมทั้งหมด)
@@ -308,23 +308,60 @@ export async function updateRequest(
   await store.updateRow("Requests", req._index, requestToRow(merged));
 }
 
-// บันทึกผลการพิจารณา 1 ขั้น
-export async function createAction(input: {
+// ตั้งค่าคำตัดสินของผู้อนุมัติ 1 ระดับ (แต่ละระดับมีได้ 1 คำตัดสิน — upsert)
+// แก้/เปลี่ยนใจได้: อนุมัติ↔ปฏิเสธ
+export async function setDecision(input: {
   requestId: number;
-  approverId: number;
   step: number;
-  decision: string;
+  decision: string; // APPROVE | REJECT
   comment: string | null;
 }): Promise<void> {
   await store.ensureReady();
-  const { Actions } = await store.batchRead(["Actions"]);
-  const id = nextId(Actions);
-  await store.appendRows("Actions", [
-    [
-      String(id), String(input.requestId), String(input.approverId), String(input.step),
-      input.decision, input.comment ?? "", new Date().toISOString(),
-    ],
-  ]);
+  const rows = await store.readTable("Actions");
+  const c = idx("Actions");
+  const approver = approverByStep(input.step);
+  const rowIndex = rows.findIndex(
+    (r) => r[0] && num(r[c.requestId]) === input.requestId && num(r[c.step]) === input.step
+  );
+  const id = rowIndex >= 0 && rows[rowIndex][0] ? rows[rowIndex][0] : String(nextId(rows));
+  const row: store.Row = [
+    id, String(input.requestId), String(approver?.id ?? input.step), String(input.step),
+    input.decision, input.comment ?? "", new Date().toISOString(),
+  ];
+  if (rowIndex >= 0) await store.updateRow("Actions", rowIndex, row);
+  else await store.appendRows("Actions", [row]);
+}
+
+// ยกเลิกคำตัดสินของระดับหนึ่ง (เคลียร์แถวให้ว่าง)
+export async function clearDecision(requestId: number, step: number): Promise<void> {
+  await store.ensureReady();
+  const rows = await store.readTable("Actions");
+  const c = idx("Actions");
+  const rowIndex = rows.findIndex(
+    (r) => r[0] && num(r[c.requestId]) === requestId && num(r[c.step]) === step
+  );
+  if (rowIndex >= 0) await store.updateRow("Actions", rowIndex, ["", "", "", "", "", "", ""]);
+}
+
+// คำนวณสถานะคำขอใหม่จากคำตัดสินปัจจุบันของทั้ง 3 ระดับ
+//  - มีระดับใดปฏิเสธ = ปฏิเสธทันที
+//  - อนุมัติครบ 3 = อนุมัติ
+//  - ไม่งั้น = รอระดับแรกที่ยังไม่อนุมัติ
+// selectedSlot จะถูกล้างถ้าระดับ 1 ไม่ได้อยู่สถานะอนุมัติ
+export async function recomputeStatus(requestId: number): Promise<string> {
+  const req = await getRequestById(requestId);
+  if (!req) throw new Error("ไม่พบคำขอ");
+  const dec: Record<number, string> = {};
+  for (const a of req.actions) dec[a.step] = a.decision;
+
+  let status: string;
+  if ([1, 2, 3].some((k) => dec[k] === "REJECT")) status = "REJECTED";
+  else if ([1, 2, 3].every((k) => dec[k] === "APPROVE")) status = "APPROVED";
+  else status = `PENDING_${[1, 2, 3].find((k) => dec[k] !== "APPROVE")}`;
+
+  const selectedSlotId = dec[1] === "APPROVE" ? req.selectedSlotId : null;
+  await updateRequest(requestId, { status, selectedSlotId });
+  return status;
 }
 
 // ===== options (dropdown) =====

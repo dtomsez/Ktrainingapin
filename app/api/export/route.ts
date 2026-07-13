@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import { loadAllRequests } from "@/lib/db";
-import { isAdmin } from "@/lib/adminAuth";
+import { currentLevel } from "@/lib/adminAuth";
+import { approverByStep } from "@/lib/approvers";
 import { logEvent } from "@/lib/log";
 import { STATUS_LABELS, COURSE_TYPE_LABELS, parsePositions, formatDateRange } from "@/lib/labels";
 
@@ -9,12 +10,13 @@ export const dynamic = "force-dynamic";
 
 // ดาวน์โหลดข้อมูลคำขอทั้งหมดเป็นไฟล์ Excel — เฉพาะผู้ที่ใส่รหัสผ่านผู้อนุมัติแล้ว
 export async function GET(req: Request) {
-  if (!(await isAdmin())) {
+  const level = await currentLevel();
+  if (level === null) {
     return NextResponse.redirect(new URL("/admin/login", req.url));
   }
 
   const requests = (await loadAllRequests()).sort((a, b) => a.id - b.id);
-  await logEvent("EXPORT", { actor: "ผู้อนุมัติ", detail: `${requests.length} คำขอ` });
+  await logEvent("EXPORT", { actor: approverByStep(level)?.name, detail: `${requests.length} คำขอ` });
 
   const wb = new ExcelJS.Workbook();
   wb.creator = "ระบบขอจัดประชุม/อบรม";

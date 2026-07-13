@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { loadAllRequests } from "@/lib/db";
 import { requireAdmin } from "@/lib/adminAuth";
+import { approverByStep } from "@/lib/approvers";
 import { logEvent } from "@/lib/log";
 import { timeToMinutes } from "@/lib/hours";
 import { effectiveSlots } from "@/lib/overlap";
@@ -17,8 +18,8 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<{ m?: string }>;
 }) {
-  await requireAdmin();
-  await logEvent("VIEW_DASHBOARD", { actor: "ผู้อนุมัติ", detail: "รายเดือน" });
+  const level = await requireAdmin();
+  await logEvent("VIEW_DASHBOARD", { actor: approverByStep(level)?.name, detail: "รายเดือน" });
   const { m } = await searchParams;
 
   const now = new Date();

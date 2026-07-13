@@ -1,4 +1,5 @@
 import { requireAdmin } from "@/lib/adminAuth";
+import { approverByStep } from "@/lib/approvers";
 import { getLogs, logEvent, EVENT_LABELS } from "@/lib/log";
 import AdminNav from "../AdminNav";
 import CountUp from "../dashboard/CountUp";
@@ -24,8 +25,8 @@ const EVENT_STYLES: Record<string, string> = {
 };
 
 export default async function LogsPage() {
-  await requireAdmin();
-  await logEvent("VIEW_LOGS", { actor: "ผู้อนุมัติ" });
+  const level = await requireAdmin();
+  await logEvent("VIEW_LOGS", { actor: approverByStep(level)?.name });
   const logs = await getLogs();
 
   const now = new Date();

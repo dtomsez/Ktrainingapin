@@ -1,5 +1,6 @@
 import { getOptions, loadAllRequests } from "@/lib/db";
 import { requireAdmin } from "@/lib/adminAuth";
+import { approverByStep } from "@/lib/approvers";
 import { logEvent } from "@/lib/log";
 import { parsePositions, OPTION_CATEGORIES } from "@/lib/labels";
 import AdminNav from "../AdminNav";
@@ -9,8 +10,8 @@ import { deleteOption } from "./actions";
 export const dynamic = "force-dynamic";
 
 export default async function DataControlPage() {
-  await requireAdmin();
-  await logEvent("VIEW_DATACONTROL", { actor: "ผู้อนุมัติ" });
+  const level = await requireAdmin();
+  await logEvent("VIEW_DATACONTROL", { actor: approverByStep(level)?.name });
   const items = await getOptions();
   const requests = await loadAllRequests();
 

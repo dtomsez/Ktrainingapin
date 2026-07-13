@@ -2,18 +2,20 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ADMIN_COOKIE, adminToken, adminPassword } from "@/lib/adminAuth";
+import { ADMIN_COOKIE, cookieValue, levelForPassword } from "@/lib/adminAuth";
+import { approverByStep } from "@/lib/approvers";
 import { logEvent } from "@/lib/log";
 
 export async function loginAdmin(_prev: { error?: string } | undefined, formData: FormData) {
   const password = String(formData.get("password") ?? "");
-  if (password !== adminPassword()) {
+  const level = levelForPassword(password);
+  if (level === null) {
     await logEvent("LOGIN_FAIL");
     return { error: "รหัสผ่านไม่ถูกต้อง" };
   }
-  await logEvent("LOGIN_SUCCESS");
+  await logEvent("LOGIN_SUCCESS", { actor: approverByStep(level)?.name });
   const cookieStore = await cookies();
-  cookieStore.set(ADMIN_COOKIE, adminToken(), {
+  cookieStore.set(ADMIN_COOKIE, cookieValue(level), {
     httpOnly: true,
     sameSite: "lax",
     path: "/",

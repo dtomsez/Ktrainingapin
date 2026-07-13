@@ -1,6 +1,6 @@
 import { getRequestByNo } from "@/lib/db";
 import { logEvent } from "@/lib/log";
-import { STATUS_LABELS, STATUS_COLORS, COURSE_TYPE_LABELS, pendingStep, parsePositions, formatDateRange } from "@/lib/labels";
+import { COURSE_TYPE_LABELS, parsePositions, formatDateRange } from "@/lib/labels";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +15,16 @@ export default async function TrackPage({
   if (query) {
     await logEvent("TRACK", { requestNo: query, detail: request ? "พบคำขอ" : "ไม่พบคำขอ" });
   }
+
+  // แสดงเฉพาะผลลัพธ์: อนุมัติ / ปฏิเสธ / อยู่ระหว่างพิจารณา (ถ้าระดับใดปฏิเสธ = ปฏิเสธทันที)
+  const isApproved = request?.status === "APPROVED";
+  const isRejected = request?.status === "REJECTED";
+  const statusLabel = isApproved ? "อนุมัติแล้ว" : isRejected ? "ปฏิเสธ" : "อยู่ระหว่างการพิจารณา";
+  const statusColor = isApproved
+    ? "bg-green-100 text-green-800"
+    : isRejected
+      ? "bg-red-100 text-red-800"
+      : "bg-amber-100 text-amber-800 animate-pulse-soft";
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -35,9 +45,9 @@ export default async function TrackPage({
         <button className="btn-primary shrink-0">🔍 ค้นหา</button>
       </form>
 
-      {no && !request && (
+      {query && !request && (
         <div className="card animate-pop-in border-red-200 bg-red-50/90 text-red-700">
-          ไม่พบคำขอเลขที่ <b className="font-mono">{no}</b> — กรุณาตรวจสอบเลขที่คำขออีกครั้ง
+          ไม่พบคำขอเลขที่ <b className="font-mono">{query}</b> — กรุณาตรวจสอบเลขที่คำขออีกครั้ง
         </div>
       )}
 
@@ -60,75 +70,31 @@ export default async function TrackPage({
                 </div>
               )}
             </div>
-            <span className={`animate-pop-in rounded-full px-4 py-1.5 text-sm font-semibold shadow-sm ${STATUS_COLORS[request.status]} ${request.status.startsWith("PENDING") ? "animate-pulse-soft" : ""}`}>
-              {STATUS_LABELS[request.status]}
+            <span className={`animate-pop-in rounded-full px-4 py-1.5 text-sm font-semibold shadow-sm ${statusColor}`}>
+              {statusLabel}
             </span>
           </div>
 
-          {request.status === "APPROVED" && request.selectedSlot && (
+          {/* ผลลัพธ์แบบเรียบง่าย: อนุมัติ / ปฏิเสธ / กำลังพิจารณา */}
+          {isApproved && request.selectedSlot ? (
             <div className="animate-pop-in rounded-xl border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3 text-sm text-green-800 shadow-sm">
-              ✅ วันที่ได้รับอนุมัติ: <b>{formatDateRange(request.selectedSlot.startDate, request.selectedSlot.endDate)}</b>{" "}
+              ✅ คำขอได้รับการอนุมัติแล้ว · วันที่จัด: <b>{formatDateRange(request.selectedSlot.startDate, request.selectedSlot.endDate)}</b>{" "}
               เวลา {request.selectedSlot.startTime}–{request.selectedSlot.endTime} น. (รวม {request.selectedSlot.totalHours} ชั่วโมง)
+            </div>
+          ) : isRejected ? (
+            <div className="animate-pop-in rounded-xl border border-red-200 bg-gradient-to-r from-red-50 to-rose-50 px-4 py-3 text-sm text-red-800 shadow-sm">
+              ✕ คำขอนี้ไม่ได้รับการอนุมัติ
+            </div>
+          ) : (
+            <div className="animate-pop-in rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3 text-sm text-amber-800 shadow-sm">
+              ⏳ คำขออยู่ระหว่างการพิจารณา กรุณารอผลการอนุมัติ
             </div>
           )}
 
           <div>
-            <h3 className="mb-4 font-semibold">ลำดับการอนุมัติ</h3>
-            <ol className="space-y-0">
-              {[1, 2, 3].map((step) => {
-                const action = request.actions.find((a) => a.step === step);
-                const current = pendingStep(request.status) === step;
-                const skipped = request.status === "REJECTED" && !action;
-                return (
-                  <li key={step} className="relative flex items-start gap-4 pb-6 last:pb-0">
-                    {step < 3 && (
-                      <span
-                        className={`timeline-bar absolute left-[15px] top-9 h-[calc(100%-2.25rem)] w-0.5 rounded ${
-                          action?.decision === "APPROVE" ? "bg-gradient-to-b from-green-400 to-green-200" : "bg-slate-200"
-                        }`}
-                        style={{ animationDelay: `${step * 0.15}s` }}
-                        aria-hidden
-                      />
-                    )}
-                    <span
-                      className={`animate-pop-in relative z-10 mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold shadow-md transition-transform hover:scale-110 ${
-                        action?.decision === "APPROVE"
-                          ? "bg-gradient-to-br from-green-400 to-green-600 text-white shadow-green-500/40"
-                          : action?.decision === "REJECT"
-                            ? "bg-gradient-to-br from-red-400 to-red-600 text-white shadow-red-500/40"
-                            : current
-                              ? "animate-pulse-soft bg-gradient-to-br from-amber-300 to-amber-500 text-white shadow-amber-500/40"
-                              : "bg-slate-200 text-slate-500"
-                      }`}
-                      style={{ animationDelay: `${step * 0.12}s` }}
-                    >
-                      {action?.decision === "APPROVE" ? "✓" : action?.decision === "REJECT" ? "✕" : step}
-                    </span>
-                    <div>
-                      <div className="text-sm font-medium">
-                        ผู้อนุมัติท่านที่ {step}
-                        {action && <span className="text-slate-500"> — {action.approver.name}</span>}
-                      </div>
-                      <div className="text-sm text-slate-500">
-                        {action
-                          ? `${action.decision === "APPROVE" ? "อนุมัติ" : "ปฏิเสธ"}เมื่อ ${new Date(action.decidedAt).toLocaleString("th-TH")}${action.comment ? ` · "${action.comment}"` : ""}`
-                          : current
-                            ? "กำลังรอพิจารณา..."
-                            : skipped
-                              ? "ไม่ถึงขั้นตอนนี้"
-                              : "รอขั้นตอนก่อนหน้า"}
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
-          </div>
-
-          <div>
-            <h3 className="mb-3 font-semibold">วันที่ที่เสนอ</h3>
+            <h3 className="mb-3 font-semibold">{isApproved ? "วันที่จัด" : "วันที่ที่เสนอ"}</h3>
             <ul className="space-y-2 text-sm">
-              {request.slots.map((s, i) => (
+              {(isApproved && request.selectedSlot ? [request.selectedSlot] : request.slots).map((s, i) => (
                 <li
                   key={s.id}
                   className={`animate-fade-up rounded-xl border px-4 py-2.5 transition-all duration-200 hover:translate-x-1 ${

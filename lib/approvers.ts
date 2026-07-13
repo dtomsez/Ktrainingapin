@@ -1,6 +1,5 @@
-// ผู้อนุมัติ 3 ท่าน กำหนดตายตัว (เดิมเก็บในตาราง Approver ของ Prisma)
+// ผู้อนุมัติ 3 ระดับ กำหนดตายตัว — แต่ละระดับมีรหัสผ่านของตัวเอง (ดู lib/adminAuth.ts)
 // ใช้แสดงชื่อในประวัติการอนุมัติ และปลายทางอีเมลแจ้งเตือน
-// เข้าใช้งานฝั่งผู้อนุมัติผ่านรหัสผ่านเดียวร่วมกัน (lib/adminAuth.ts)
 export interface Approver {
   id: number;
   name: string;
@@ -9,9 +8,9 @@ export interface Approver {
 }
 
 export const APPROVERS: Approver[] = [
-  { id: 1, name: "ผู้อนุมัติท่านที่ 1", email: "approver1@company.co.th", stepOrder: 1 },
-  { id: 2, name: "ผู้อนุมัติท่านที่ 2", email: "approver2@company.co.th", stepOrder: 2 },
-  { id: 3, name: "ผู้อนุมัติท่านที่ 3", email: "approver3@company.co.th", stepOrder: 3 },
+  { id: 1, name: "ผู้อนุมัติลำดับที่ 1 (ทีม HR เครือข่ายฯ)", email: "approver1@company.co.th", stepOrder: 1 },
+  { id: 2, name: "ผู้อนุมัติลำดับที่ 2 (ผู้บริหารทีมสนับสนุนฯ)", email: "approver2@company.co.th", stepOrder: 2 },
+  { id: 3, name: "ผู้อนุมัติลำดับที่ 3 (ผู้บริหารทีม RTI)", email: "approver3@company.co.th", stepOrder: 3 },
 ];
 
 export function approverByStep(step: number): Approver | null {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { loadAllRequests } from "@/lib/db";
 import { requireAdmin } from "@/lib/adminAuth";
+import { approverByStep } from "@/lib/approvers";
 import { logEvent } from "@/lib/log";
 import { STATUS_LABELS, STATUS_COLORS, formatDateRange } from "@/lib/labels";
 import AdminNav from "./AdminNav";
@@ -8,8 +9,8 @@ import AdminNav from "./AdminNav";
 export const dynamic = "force-dynamic";
 
 export default async function AdminQueuePage() {
-  await requireAdmin();
-  await logEvent("VIEW_QUEUE", { actor: "ผู้อนุมัติ" });
+  const level = await requireAdmin();
+  await logEvent("VIEW_QUEUE", { actor: approverByStep(level)?.name });
   const all = await loadAllRequests();
   const pending = all
     .filter((r) => r.status.startsWith("PENDING"))

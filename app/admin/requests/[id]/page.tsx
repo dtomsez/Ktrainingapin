@@ -1,13 +1,13 @@
 import { notFound } from "next/navigation";
 import { getRequestById } from "@/lib/db";
 import { requireAdmin } from "@/lib/adminAuth";
+import { approverByStep } from "@/lib/approvers";
 import { logEvent } from "@/lib/log";
 import { findOverlaps } from "@/lib/overlap";
 import {
   STATUS_LABELS,
   STATUS_COLORS,
   COURSE_TYPE_LABELS,
-  pendingStep,
   parsePositions,
   formatDateRange,
 } from "@/lib/labels";
@@ -21,14 +21,13 @@ export default async function RequestDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
+  const myLevel = await requireAdmin();
   const { id } = await params;
   const request = await getRequestById(Number(id));
   if (!request) notFound();
-  await logEvent("VIEW_REQUEST", { actor: "ผู้อนุมัติ", requestNo: request.requestNo });
+  await logEvent("VIEW_REQUEST", { actor: approverByStep(myLevel)?.name, requestNo: request.requestNo });
 
   const overlaps = await findOverlaps(request.id);
-  const step = pendingStep(request.status);
   const traineePositions = parsePositions(request.traineePositions);
 
   const slotLabel = (s: (typeof request.slots)[number]) =>
@@ -45,6 +44,18 @@ export default async function RequestDetailPage({
   const visibleSlots = request.selectedSlotId
     ? request.slots.filter((s) => s.id === request.selectedSlotId)
     : request.slots;
+
+  // คำตัดสินของแต่ละระดับ (ปัจจุบัน)
+  const decisionOf = (step: number) => request.actions.find((a) => a.step === step) ?? null;
+  const myDecision = (decisionOf(myLevel)?.decision as "APPROVE" | "REJECT" | undefined) ?? null;
+  const isMyTurn = request.status === `PENDING_${myLevel}`;
+  const canAct = isMyTurn || myDecision !== null;
+
+  const slotOptions = request.slots.map((s) => ({
+    id: s.id,
+    label: slotLabel(s),
+    overlapWarning: overlapText(s.id),
+  }));
 
   return (
     <div>
@@ -144,42 +155,53 @@ export default async function RequestDetailPage({
             </ul>
           </div>
 
-          {request.actions.length > 0 && (
-            <div className="card animate-fade-up delay-3">
-              <h2 className="mb-3 text-lg font-semibold text-sky-700">ประวัติการพิจารณา</h2>
-              <ul className="space-y-2 text-sm">
-                {request.actions.map((a) => (
-                  <li key={a.id} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
-                    <b>ขั้นที่ {a.step}</b> — {a.approver.name}{" "}
-                    <span className={a.decision === "APPROVE" ? "text-green-700" : "text-red-700"}>
-                      {a.decision === "APPROVE" ? "อนุมัติ" : "ปฏิเสธ"}
-                    </span>{" "}
-                    · {new Date(a.decidedAt).toLocaleString("th-TH")}
-                    {a.comment && <div className="text-slate-500">&ldquo;{a.comment}&rdquo;</div>}
+          {/* คำตัดสินปัจจุบันของผู้อนุมัติทั้ง 3 ระดับ */}
+          <div className="card animate-fade-up delay-3">
+            <h2 className="mb-3 text-lg font-semibold text-sky-700">สถานะการพิจารณาแต่ละระดับ</h2>
+            <ul className="space-y-2 text-sm">
+              {[1, 2, 3].map((step) => {
+                const a = decisionOf(step);
+                const name = approverByStep(step)?.name ?? `ระดับ ${step}`;
+                const waiting = request.status === `PENDING_${step}`;
+                return (
+                  <li key={step} className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                    <div>
+                      <div className="font-medium">{name}</div>
+                      {a?.comment && <div className="text-xs text-slate-500">&ldquo;{a.comment}&rdquo;</div>}
+                      {a && (
+                        <div className="text-xs text-slate-400">{new Date(a.decidedAt).toLocaleString("th-TH")}</div>
+                      )}
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                        a?.decision === "APPROVE"
+                          ? "bg-green-100 text-green-700"
+                          : a?.decision === "REJECT"
+                            ? "bg-red-100 text-red-700"
+                            : waiting
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-slate-200 text-slate-500"
+                      }`}
+                    >
+                      {a?.decision === "APPROVE" ? "อนุมัติ" : a?.decision === "REJECT" ? "ปฏิเสธ" : waiting ? "กำลังพิจารณา" : "รอคิว"}
+                    </span>
                   </li>
-                ))}
-              </ul>
-            </div>
-          )}
+                );
+              })}
+            </ul>
+          </div>
         </div>
 
         <div>
-          {step ? (
-            <DecisionForm
-              requestId={request.id}
-              step={step}
-              mustPickSlot={step === 1 && !request.selectedSlotId}
-              slotOptions={visibleSlots.map((s) => ({
-                id: s.id,
-                label: slotLabel(s),
-                overlapWarning: overlapText(s.id),
-              }))}
-            />
-          ) : (
-            <div className="card animate-fade-up delay-2 text-sm text-slate-500">
-              คำขอนี้ถูกพิจารณาเสร็จสิ้นแล้ว
-            </div>
-          )}
+          <DecisionForm
+            requestId={request.id}
+            myLevel={myLevel}
+            myName={approverByStep(myLevel)?.name ?? `ระดับ ${myLevel}`}
+            currentDecision={myDecision}
+            canAct={canAct}
+            needSlot={myLevel === 1}
+            slotOptions={slotOptions}
+          />
         </div>
       </div>
     </div>
