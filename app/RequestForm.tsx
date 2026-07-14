@@ -25,7 +25,6 @@ const CONFETTI_COLORS = ["#00a9e0", "#0077c8", "#003f87", "#f59e0b", "#10b981", 
 export interface FormOptions {
   businessLines: string[];
   districts: string[];
-  networkGroups: string[];
   positions: string[];
 }
 
@@ -98,7 +97,6 @@ export default function RequestForm({ options }: { options: FormOptions }) {
     requesterName: "",
     businessLine: "",
     department: "",
-    networkGroup: "",
     position: "",
     phone: "",
     courseName: "",
@@ -242,25 +240,12 @@ export default function RequestForm({ options }: { options: FormOptions }) {
             </select>
           </div>
           <div>
-            <label className="field-label">สำนักงานเขต/ทีมขึ้นตรงสายงานเครือข่ายฯ/สำนักงานใหญ่ *</label>
+            <label className="field-label">สังกัดหน่วยงาน *</label>
             <select required className="field-input" value={form.department} onChange={set("department")}>
               <option value="" disabled>
                 — กรุณาเลือก —
               </option>
               {options.districts.map((o) => (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="field-label">กลุ่มเครือข่าย/สำนักงานภาค/ทีมขึ้นตรงสายงานเครือข่ายฯ/สำนักงานใหญ่ *</label>
-            <select required className="field-input" value={form.networkGroup} onChange={set("networkGroup")}>
-              <option value="" disabled>
-                — กรุณาเลือก —
-              </option>
-              {options.networkGroups.map((o) => (
                 <option key={o} value={o}>
                   {o}
                 </option>

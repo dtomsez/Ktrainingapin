@@ -12,7 +12,6 @@ export default async function HomePage() {
       options={{
         businessLines: byCategory("BUSINESS_LINE"),
         districts: byCategory("DISTRICT"),
-        networkGroups: byCategory("NETWORK_GROUP"),
         positions: byCategory("POSITION"),
       }}
     />

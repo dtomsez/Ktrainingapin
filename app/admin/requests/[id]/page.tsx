@@ -94,13 +94,15 @@ export default async function RequestDetailPage({
                 <dd>{request.businessLine || "-"}</dd>
               </div>
               <div>
-                <dt className="font-medium text-slate-500">สำนักงานเขต/ทีมขึ้นตรงสายงานเครือข่ายฯ/สำนักงานใหญ่</dt>
+                <dt className="font-medium text-slate-500">สังกัดหน่วยงาน</dt>
                 <dd>{request.department}</dd>
               </div>
-              <div>
-                <dt className="font-medium text-slate-500">กลุ่มเครือข่าย/สำนักงานภาค/ทีมขึ้นตรงสายงานเครือข่ายฯ/สำนักงานใหญ่</dt>
-                <dd>{request.networkGroup || "-"}</dd>
-              </div>
+              {request.networkGroup && (
+                <div>
+                  <dt className="font-medium text-slate-500">กลุ่มเครือข่าย/สำนักงานภาค/ทีมขึ้นตรงสายงานเครือข่ายฯ/สำนักงานใหญ่</dt>
+                  <dd>{request.networkGroup}</dd>
+                </div>
+              )}
               <div>
                 <dt className="font-medium text-slate-500">จำนวนผู้เข้าประชุม/อบรม</dt>
                 <dd>{request.participants} คน</dd>

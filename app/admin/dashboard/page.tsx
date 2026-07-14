@@ -56,11 +56,7 @@ export default async function DashboardPage({
     }
   }
 
-  // สรุปภาพรวมสถานะทั้งหมด (เลขรวมทุกช่วงเวลา)
-  const count = (s: string) => allRequests.filter((r) => r.status === s).length;
-  const pendingTotal = count("PENDING_1") + count("PENDING_2") + count("PENDING_3");
-
-  // ตัวเลขเฉพาะเดือนที่กำลังดู: นับคำขอที่มีวันจัด (slot ที่มีผล) คาบเกี่ยวเดือนนี้
+  // ตัวเลขเฉพาะเดือนที่กำลังดู: นับคำขอที่มีวันจัด (slot ที่มีผล) คาบเกี่ยวเดือนนี้เท่านั้น
   const monthEndOfDay = new Date(year, month, 0, 23, 59, 59, 999);
   const monthReqs = allRequests.filter((req) =>
     effectiveSlots(req).some(
@@ -71,12 +67,6 @@ export default async function DashboardPage({
   const monthApproved = monthReqs.filter((r) => r.status === "APPROVED").length;
   const monthRejected = monthReqs.filter((r) => r.status === "REJECTED").length;
 
-  // ชั่วโมงรวมทุกช่วงเวลา (ไว้เทียบกับชั่วโมงของเดือนนี้)
-  const allHours =
-    Math.round(
-      requests.reduce((sum, r) => sum + effectiveSlots(r).reduce((s2, sl) => s2 + sl.totalHours, 0), 0) * 100
-    ) / 100;
-
   const prevM = `${month === 1 ? year - 1 : year}-${String(month === 1 ? 12 : month - 1).padStart(2, "0")}`;
   const nextM = `${month === 12 ? year + 1 : year}-${String(month === 12 ? 1 : month + 1).padStart(2, "0")}`;
   const monthName = monthStart.toLocaleDateString("th-TH", { month: "long", year: "numeric" });
@@ -86,20 +76,18 @@ export default async function DashboardPage({
 
   const statCards = [
     {
-      label: "คำขอทั้งหมด",
+      label: `คำขอเดือน${monthOnly}`,
       icon: "📄",
       iconBg: "from-sky-500 to-blue-600",
-      value: <CountUp value={allRequests.length} />,
+      value: <CountUp value={monthReqs.length} />,
       color: "text-slate-900",
-      sub: `เดือน${monthOnly}: ${monthReqs.length} คำขอ`,
     },
     {
       label: "รอการอนุมัติ",
       icon: "⏳",
       iconBg: "from-amber-400 to-orange-500",
-      value: <CountUp value={pendingTotal} />,
+      value: <CountUp value={monthPending} />,
       color: "text-amber-600",
-      sub: `เดือน${monthOnly}: ${monthPending} คำขอ`,
     },
     {
       label: "อนุมัติแล้ว / ปฏิเสธ",
@@ -108,16 +96,15 @@ export default async function DashboardPage({
       value: (
         <>
           <span className="text-green-600">
-            <CountUp value={count("APPROVED")} />
+            <CountUp value={monthApproved} />
           </span>
           <span className="text-slate-300"> / </span>
           <span className="text-red-500">
-            <CountUp value={count("REJECTED")} />
+            <CountUp value={monthRejected} />
           </span>
         </>
       ),
       color: "",
-      sub: `เดือน${monthOnly}: ${monthApproved} / ${monthRejected}`,
     },
     {
       label: `ชั่วโมงประชุม/อบรมเดือนนี้ (${summary.courses.length} หลักสูตร)`,
@@ -125,7 +112,6 @@ export default async function DashboardPage({
       iconBg: "from-sky-400 to-blue-600",
       value: <CountUp value={summary.totalHours} suffix=" ชม." />,
       color: "gradient-text",
-      sub: `รวมทุกช่วงเวลา: ${allHours} ชม.`,
     },
   ];
 
@@ -149,9 +135,6 @@ export default async function DashboardPage({
             <div>
               <div className="text-xs text-slate-500">{c.label}</div>
               <div className={`text-2xl font-bold ${c.color}`}>{c.value}</div>
-              <div className="mt-0.5 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
-                {c.sub}
-              </div>
             </div>
           </div>
         ))}

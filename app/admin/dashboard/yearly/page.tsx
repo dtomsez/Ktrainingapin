@@ -3,6 +3,7 @@ import { loadAllRequests } from "@/lib/db";
 import { requireAdmin } from "@/lib/adminAuth";
 import { approverByStep } from "@/lib/approvers";
 import { logEvent } from "@/lib/log";
+import { effectiveSlots } from "@/lib/overlap";
 import { buildMonthEvents, summarizeMonth, THAI_MONTHS } from "@/lib/dashboard";
 import AdminNav from "../../AdminNav";
 import CountUp from "../CountUp";
@@ -21,7 +22,18 @@ export default async function YearlyDashboardPage({
   const year = y && /^\d{4}$/.test(y) ? Number(y) : new Date().getFullYear();
   const thaiYear = year + 543;
 
-  const requests = (await loadAllRequests()).filter((r) => r.status !== "REJECTED");
+  const allReqs = await loadAllRequests();
+  const requests = allReqs.filter((r) => r.status !== "REJECTED");
+
+  // นับคำขอของปีนี้ (มีวันจัดคาบเกี่ยวปีนี้) รวมที่ถูกปฏิเสธด้วย เพื่อสรุปจำนวนทั้งหมด/อนุมัติ/ปฏิเสธ
+  const yearStart = new Date(year, 0, 1);
+  const yearEnd = new Date(year, 11, 31, 23, 59, 59, 999);
+  const yearRequests = allReqs.filter((req) =>
+    effectiveSlots(req).some((s) => new Date(s.startDate) <= yearEnd && new Date(s.endDate) >= yearStart)
+  );
+  const totalCount = yearRequests.length;
+  const approvedCount = yearRequests.filter((r) => r.status === "APPROVED").length;
+  const rejectedCount = yearRequests.filter((r) => r.status === "REJECTED").length;
 
   // สรุปทั้ง 12 เดือนของปี
   const months = Array.from({ length: 12 }, (_, i) => {
@@ -53,6 +65,43 @@ export default async function YearlyDashboardPage({
           📊 Dashboard <span className="gradient-text">รายปี {thaiYear}</span>
         </h1>
         <ViewToggle active="year" monthHref="/admin/dashboard" yearHref={`/admin/dashboard/yearly?y=${year}`} />
+      </div>
+
+      {/* สรุปจำนวนคำขอทั้งปี: ทั้งหมด / อนุมัติ / ปฏิเสธ */}
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <div className="card card-hover animate-fade-up flex items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 text-xl shadow-lg">
+            📄
+          </div>
+          <div>
+            <div className="text-xs text-slate-500">จำนวนคำขอทั้งหมด (ปี {thaiYear})</div>
+            <div className="text-2xl font-bold text-slate-900">
+              <CountUp value={totalCount} suffix=" คำขอ" />
+            </div>
+          </div>
+        </div>
+        <div className="card card-hover animate-fade-up delay-1 flex items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-green-600 text-xl shadow-lg">
+            ✅
+          </div>
+          <div>
+            <div className="text-xs text-slate-500">จำนวนอนุมัติ</div>
+            <div className="text-2xl font-bold text-green-600">
+              <CountUp value={approvedCount} suffix=" คำขอ" />
+            </div>
+          </div>
+        </div>
+        <div className="card card-hover animate-fade-up delay-2 flex items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-400 to-red-600 text-xl shadow-lg">
+            ❌
+          </div>
+          <div>
+            <div className="text-xs text-slate-500">จำนวนปฏิเสธ</div>
+            <div className="text-2xl font-bold text-red-500">
+              <CountUp value={rejectedCount} suffix=" คำขอ" />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
