@@ -155,7 +155,7 @@ export default async function DashboardPage({
 
       {/* Bento: กราฟสรุปเดือนนี้ */}
       <div className="mb-6 grid gap-4 lg:grid-cols-3">
-        <div className="bento-card animate-fade-up delay-2 self-start">
+        <div className="bento-card animate-fade-up delay-2">
           <div className="bento-title">🍩 สัดส่วนสถานะเดือนนี้</div>
           {monthReqs.length > 0 ? (
             <DonutChart segments={monthStatusSegments} centerLabel="คำขอ" centerValue={monthReqs.length} />
@@ -164,7 +164,7 @@ export default async function DashboardPage({
           )}
         </div>
 
-        <div className="bento-card animate-fade-up delay-2 self-start">
+        <div className="bento-card animate-fade-up delay-2">
           <div className="bento-title">🕸️ ชั่วโมงอบรมต่อตำแหน่งเดือนนี้</div>
           {radarAxes.length >= 3 ? (
             <RadarChart axes={radarAxes} unit=" ชม." />
@@ -190,7 +190,7 @@ export default async function DashboardPage({
           )}
         </div>
 
-        <div className="bento-card animate-fade-up delay-3 self-start">
+        <div className="bento-card animate-fade-up delay-3">
           <div className="bento-title">📚 หลักสูตรที่ประชุม/อบรมเดือนนี้ ({summary.courses.length})</div>
           {summary.courses.length === 0 ? (
             <p className="py-4 text-center text-sm text-slate-400">ไม่มีการประชุม/อบรมในเดือนนี้</p>

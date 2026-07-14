@@ -98,24 +98,9 @@ export default async function YearlyDashboardPage({
         ))}
       </div>
 
-      {/* Bento: กราฟภาพรวมทั้งปี */}
-      <div className="mb-4 grid gap-4 lg:grid-cols-3">
-        <div className="bento-card animate-fade-up delay-2 lg:col-span-2">
-          <div className="bento-title">📈 แนวโน้มชั่วโมงประชุม/อบรมรายเดือน (ปี {thaiYear})</div>
-          <TrendChart points={trendPoints} unit="ชม." />
-        </div>
-        <div className="bento-card animate-fade-up delay-3">
-          <div className="bento-title">🍩 สัดส่วนสถานะคำขอ</div>
-          {totalCount > 0 ? (
-            <DonutChart segments={statusSegments} centerLabel="คำขอ" centerValue={totalCount} />
-          ) : (
-            <p className="py-10 text-center text-sm text-slate-400">ยังไม่มีคำขอในปีนี้</p>
-          )}
-        </div>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="bento-card animate-fade-up delay-2 self-start">
+      {/* Row 1: เรดาร์ + โดนัท คู่กัน (สูงเท่ากัน) */}
+      <div className="mb-4 grid gap-4 lg:grid-cols-2">
+        <div className="bento-card animate-fade-up delay-2">
           <div className="bento-title">🕸️ ชั่วโมงอบรมต่อตำแหน่ง (ทั้งปี {thaiYear})</div>
           {radarAxes.length >= 3 ? (
             <RadarChart axes={radarAxes} color={SERIES_COLORS[1]} unit=" ชม." />
@@ -131,8 +116,24 @@ export default async function YearlyDashboardPage({
             <p className="py-10 text-center text-sm text-slate-400">ยังไม่มีข้อมูลตำแหน่ง</p>
           )}
         </div>
+        <div className="bento-card animate-fade-up delay-3">
+          <div className="bento-title">🍩 สัดส่วนสถานะคำขอ</div>
+          {totalCount > 0 ? (
+            <DonutChart segments={statusSegments} centerLabel="คำขอ" centerValue={totalCount} />
+          ) : (
+            <p className="py-10 text-center text-sm text-slate-400">ยังไม่มีคำขอในปีนี้</p>
+          )}
+        </div>
+      </div>
 
-        <div className="bento-card animate-fade-up delay-4 lg:col-span-2">
+      {/* Row 2: กราฟเส้นแนวโน้ม เต็มความกว้าง */}
+      <div className="mb-4 bento-card animate-fade-up delay-3">
+        <div className="bento-title">📈 แนวโน้มชั่วโมงประชุม/อบรมรายเดือน (ปี {thaiYear})</div>
+        <TrendChart points={trendPoints} unit="ชม." />
+      </div>
+
+      {/* Row 3: รายละเอียดรายเดือน เต็มความกว้าง */}
+      <div className="bento-card animate-fade-up delay-4">
         <div className="mb-4 flex items-center justify-between">
           <Link href={`/admin/dashboard/yearly?y=${year - 1}`} className="btn-secondary">
             ← ปี {thaiYear - 1}
@@ -208,7 +209,6 @@ export default async function YearlyDashboardPage({
               </tr>
             </tbody>
           </table>
-        </div>
         </div>
       </div>
     </div>
