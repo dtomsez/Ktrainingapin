@@ -8,6 +8,9 @@ import { buildMonthEvents, summarizeMonth, THAI_MONTHS } from "@/lib/dashboard";
 import AdminNav from "../../AdminNav";
 import CountUp from "../CountUp";
 import ViewToggle from "../ViewToggle";
+import { DonutChart, TrendChart, RadarChart, SERIES_COLORS } from "../Charts";
+
+const MONTH_ABBR = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +59,16 @@ export default async function YearlyDashboardPage({
   yearHours = Math.round(yearHours * 100) / 100;
   const yearPositions = [...yearPosHours.entries()].sort((a, b) => b[1] - a[1]);
 
+  // ข้อมูลกราฟ
+  const pendingCount = Math.max(0, totalCount - approvedCount - rejectedCount);
+  const trendPoints = months.map(({ month, summary }) => ({ label: MONTH_ABBR[month - 1], value: summary.totalHours }));
+  const statusSegments = [
+    { label: "อนุมัติ", value: approvedCount, color: "#10b981" },
+    { label: "ปฏิเสธ", value: rejectedCount, color: "#f43f5e" },
+    { label: "รอพิจารณา", value: pendingCount, color: "#f59e0b" },
+  ];
+  const radarAxes = yearPositions.map(([p, h]) => ({ label: p, value: h }));
+
   return (
     <div>
       <AdminNav active="dashboard" />
@@ -85,20 +98,41 @@ export default async function YearlyDashboardPage({
         ))}
       </div>
 
-      {yearPositions.length > 0 && (
-        <div className="card card-hover animate-fade-up delay-3 mb-6">
-          <h2 className="mb-3 text-lg font-semibold text-sky-700">👥 ชั่วโมงประชุม/อบรมรวมต่อตำแหน่ง (ทั้งปี {thaiYear})</h2>
-          <div className="flex flex-wrap gap-2">
-            {yearPositions.map(([p, h]) => (
-              <span key={p} className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-800">
-                {p} <b>{h} ชม.</b>
-              </span>
-            ))}
-          </div>
+      {/* Bento: กราฟภาพรวมทั้งปี */}
+      <div className="mb-4 grid gap-4 lg:grid-cols-3">
+        <div className="bento-card animate-fade-up delay-2 lg:col-span-2">
+          <div className="bento-title">📈 แนวโน้มชั่วโมงประชุม/อบรมรายเดือน (ปี {thaiYear})</div>
+          <TrendChart points={trendPoints} unit="ชม." />
         </div>
-      )}
+        <div className="bento-card animate-fade-up delay-3">
+          <div className="bento-title">🍩 สัดส่วนสถานะคำขอ</div>
+          {totalCount > 0 ? (
+            <DonutChart segments={statusSegments} centerLabel="คำขอ" centerValue={totalCount} />
+          ) : (
+            <p className="py-10 text-center text-sm text-slate-400">ยังไม่มีคำขอในปีนี้</p>
+          )}
+        </div>
+      </div>
 
-      <div className="card animate-fade-up delay-4">
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="bento-card animate-fade-up delay-2 self-start">
+          <div className="bento-title">🕸️ ชั่วโมงอบรมต่อตำแหน่ง (ทั้งปี {thaiYear})</div>
+          {radarAxes.length >= 3 ? (
+            <RadarChart axes={radarAxes} color={SERIES_COLORS[1]} unit=" ชม." />
+          ) : yearPositions.length > 0 ? (
+            <div className="flex flex-wrap gap-2 pt-1">
+              {yearPositions.map(([p, h]) => (
+                <span key={p} className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-800">
+                  {p} <b>{h} ชม.</b>
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="py-10 text-center text-sm text-slate-400">ยังไม่มีข้อมูลตำแหน่ง</p>
+          )}
+        </div>
+
+        <div className="bento-card animate-fade-up delay-4 lg:col-span-2">
         <div className="mb-4 flex items-center justify-between">
           <Link href={`/admin/dashboard/yearly?y=${year - 1}`} className="btn-secondary">
             ← ปี {thaiYear - 1}
@@ -174,6 +208,7 @@ export default async function YearlyDashboardPage({
               </tr>
             </tbody>
           </table>
+        </div>
         </div>
       </div>
     </div>

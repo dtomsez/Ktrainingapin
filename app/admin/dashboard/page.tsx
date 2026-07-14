@@ -10,6 +10,7 @@ import { buildMonthEvents, summarizeMonth, dayKey } from "@/lib/dashboard";
 import AdminNav from "../AdminNav";
 import CountUp from "./CountUp";
 import ViewToggle from "./ViewToggle";
+import { DonutChart, TrendChart, RadarChart } from "./Charts";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +75,21 @@ export default async function DashboardPage({
   const firstWeekday = monthStart.getDay(); // 0 = อาทิตย์
   const todayKey = dayKey(new Date());
 
+  // ข้อมูลกราฟเดือนนี้
+  const monthStatusSegments = [
+    { label: "อนุมัติ", value: monthApproved, color: "#10b981" },
+    { label: "ปฏิเสธ", value: monthRejected, color: "#f43f5e" },
+    { label: "รอพิจารณา", value: monthPending, color: "#f59e0b" },
+  ];
+  const radarAxes = summary.positionHours.map(([p, h]) => ({ label: p, value: h }));
+  const dailyPoints = Array.from({ length: daysInMonth }, (_, i) => {
+    const day = i + 1;
+    const evs = byDay.get(dayKey(new Date(year, month - 1, day))) ?? [];
+    const hours = Math.round(evs.reduce((s, e) => s + e.hoursPerDay, 0) * 100) / 100;
+    return { label: `${day}`, value: hours };
+  });
+  const dailyLabelEvery = Math.max(1, Math.ceil(daysInMonth / 10));
+
   const statCards = [
     {
       label: `คำขอเดือน${monthOnly}`,
@@ -137,12 +153,45 @@ export default async function DashboardPage({
         ))}
       </div>
 
-      {/* สรุปประจำเดือน: หลักสูตร + ชั่วโมงต่อตำแหน่ง */}
-      <div className="mb-6 grid gap-6 lg:grid-cols-2">
-        <div className="card card-hover animate-fade-up delay-2">
-          <h2 className="mb-3 text-lg font-semibold text-sky-700">
-            📚 หลักสูตรที่ประชุม/อบรมเดือนนี้ ({summary.courses.length})
-          </h2>
+      {/* Bento: กราฟสรุปเดือนนี้ */}
+      <div className="mb-6 grid gap-4 lg:grid-cols-3">
+        <div className="bento-card animate-fade-up delay-2 self-start">
+          <div className="bento-title">🍩 สัดส่วนสถานะเดือนนี้</div>
+          {monthReqs.length > 0 ? (
+            <DonutChart segments={monthStatusSegments} centerLabel="คำขอ" centerValue={monthReqs.length} />
+          ) : (
+            <p className="py-10 text-center text-sm text-slate-400">ไม่มีคำขอในเดือนนี้</p>
+          )}
+        </div>
+
+        <div className="bento-card animate-fade-up delay-2 self-start">
+          <div className="bento-title">🕸️ ชั่วโมงอบรมต่อตำแหน่งเดือนนี้</div>
+          {radarAxes.length >= 3 ? (
+            <RadarChart axes={radarAxes} unit=" ชม." />
+          ) : summary.positionHours.length > 0 ? (
+            <div className="space-y-2.5 pt-1">
+              {summary.positionHours.map(([pos, hours]) => {
+                const max = summary.positionHours[0][1];
+                return (
+                  <div key={pos}>
+                    <div className="mb-1 flex items-center justify-between text-sm">
+                      <span className="font-medium">{pos}</span>
+                      <span className="font-semibold text-sky-700">{hours} ชม.</span>
+                    </div>
+                    <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
+                      <div className="timeline-bar h-full rounded-full bg-gradient-to-r from-sky-500 to-blue-500" style={{ width: `${Math.max((hours / max) * 100, 4)}%`, transformOrigin: "left" }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="py-10 text-center text-sm text-slate-400">ไม่มีข้อมูลในเดือนนี้</p>
+          )}
+        </div>
+
+        <div className="bento-card animate-fade-up delay-3 self-start">
+          <div className="bento-title">📚 หลักสูตรที่ประชุม/อบรมเดือนนี้ ({summary.courses.length})</div>
           {summary.courses.length === 0 ? (
             <p className="py-4 text-center text-sm text-slate-400">ไม่มีการประชุม/อบรมในเดือนนี้</p>
           ) : (
@@ -169,33 +218,12 @@ export default async function DashboardPage({
             </ul>
           )}
         </div>
+      </div>
 
-        <div className="card card-hover animate-fade-up delay-3">
-          <h2 className="mb-3 text-lg font-semibold text-sky-700">👥 ชั่วโมงประชุม/อบรมรวมต่อตำแหน่ง</h2>
-          {summary.positionHours.length === 0 ? (
-            <p className="py-4 text-center text-sm text-slate-400">ไม่มีข้อมูลในเดือนนี้</p>
-          ) : (
-            <div className="space-y-2.5">
-              {summary.positionHours.map(([pos, hours]) => {
-                const max = summary.positionHours[0][1];
-                return (
-                  <div key={pos}>
-                    <div className="mb-1 flex items-center justify-between text-sm">
-                      <span className="font-medium">{pos}</span>
-                      <span className="font-semibold text-sky-700">{hours} ชม.</span>
-                    </div>
-                    <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
-                      <div
-                        className="timeline-bar h-full rounded-full bg-gradient-to-r from-sky-500 to-blue-500"
-                        style={{ width: `${Math.max((hours / max) * 100, 4)}%`, transformOrigin: "left" }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+      {/* แนวโน้มชั่วโมงรายวันในเดือน */}
+      <div className="mb-6 bento-card animate-fade-up delay-3">
+        <div className="bento-title">📈 ชั่วโมงประชุม/อบรมรายวัน (เดือน{monthOnly})</div>
+        <TrendChart points={dailyPoints} unit="ชม." showPointLabels={false} labelEvery={dailyLabelEvery} />
       </div>
 
       <div className="card animate-fade-up delay-4">
