@@ -285,7 +285,7 @@ export default function RequestForm({ options }: { options: FormOptions }) {
             <input required className="field-input" value={form.courseName} onChange={set("courseName")} placeholder="เช่น Excel ขั้นสูงสำหรับการวิเคราะห์ข้อมูล" />
           </div>
           <div>
-            <label className="field-label">รูปแบบการขอจัดประชุม / อบรม *</label>
+            <label className="field-label">รูปแบบการขอจัดประชุม/อบรม *</label>
             <div className="flex gap-3">
               {(
                 [

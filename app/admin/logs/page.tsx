@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/adminAuth";
+import { requireLevel1 } from "@/lib/adminAuth";
 import { approverByStep } from "@/lib/approvers";
 import { getLogs, logEvent, EVENT_LABELS } from "@/lib/log";
 import AdminNav from "../AdminNav";
@@ -25,7 +25,7 @@ const EVENT_STYLES: Record<string, string> = {
 };
 
 export default async function LogsPage() {
-  const level = await requireAdmin();
+  const level = await requireLevel1();
   await logEvent("VIEW_LOGS", { actor: approverByStep(level)?.name });
   const logs = await getLogs();
 

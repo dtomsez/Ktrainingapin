@@ -14,6 +14,10 @@ export async function GET(req: Request) {
   if (level === null) {
     return NextResponse.redirect(new URL("/admin/login", req.url));
   }
+  // เฉพาะผู้อนุมัติลำดับที่ 1 เท่านั้นที่ดาวน์โหลด Excel ได้
+  if (level !== 1) {
+    return NextResponse.redirect(new URL("/admin", req.url));
+  }
 
   const requests = (await loadAllRequests()).sort((a, b) => a.id - b.id);
   await logEvent("EXPORT", { actor: approverByStep(level)?.name, detail: `${requests.length} คำขอ` });

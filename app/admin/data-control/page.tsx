@@ -1,5 +1,5 @@
 import { getOptions, loadAllRequests } from "@/lib/db";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requireLevel1 } from "@/lib/adminAuth";
 import { approverByStep } from "@/lib/approvers";
 import { logEvent } from "@/lib/log";
 import { parsePositions, OPTION_CATEGORIES } from "@/lib/labels";
@@ -10,7 +10,7 @@ import { deleteOption } from "./actions";
 export const dynamic = "force-dynamic";
 
 export default async function DataControlPage() {
-  const level = await requireAdmin();
+  const level = await requireLevel1();
   await logEvent("VIEW_DATACONTROL", { actor: approverByStep(level)?.name });
   const items = await getOptions();
   const requests = await loadAllRequests();

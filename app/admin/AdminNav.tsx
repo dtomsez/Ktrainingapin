@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { logoutAdmin } from "./login/actions";
+import { currentLevel } from "@/lib/adminAuth";
 
-export default function AdminNav({ active }: { active: "queue" | "dashboard" | "data" | "logs" }) {
+export default async function AdminNav({ active }: { active: "queue" | "dashboard" | "data" | "logs" }) {
+  // Data Control / Log / ดาวน์โหลด Excel เปิดให้เฉพาะผู้อนุมัติลำดับที่ 1 เท่านั้น
+  const level = await currentLevel();
+  const isLevel1 = level === 1;
+
   const tabClass = (isActive: boolean) =>
     isActive
       ? "rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-500/30 bg-gradient-to-r from-sky-600 to-blue-700 transition-all duration-200"
@@ -16,20 +21,26 @@ export default function AdminNav({ active }: { active: "queue" | "dashboard" | "
         <Link href="/admin/dashboard" className={tabClass(active === "dashboard")}>
           📊 Dashboard
         </Link>
-        <Link href="/admin/data-control" className={tabClass(active === "data")}>
-          ⚙️ Data Control
-        </Link>
-        <Link href="/admin/logs" className={tabClass(active === "logs")}>
-          🧾 Log
-        </Link>
+        {isLevel1 && (
+          <>
+            <Link href="/admin/data-control" className={tabClass(active === "data")}>
+              ⚙️ Data Control
+            </Link>
+            <Link href="/admin/logs" className={tabClass(active === "logs")}>
+              🧾 Log
+            </Link>
+          </>
+        )}
       </div>
       <div className="flex items-center gap-3">
-        <a
-          href="/api/export"
-          className="rounded-xl border border-green-300 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-green-100 hover:shadow-md"
-        >
-          ⬇️ ดาวน์โหลด Excel
-        </a>
+        {isLevel1 && (
+          <a
+            href="/api/export"
+            className="rounded-xl border border-green-300 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-green-100 hover:shadow-md"
+          >
+            ⬇️ ดาวน์โหลด Excel
+          </a>
+        )}
         <form action={logoutAdmin}>
           <button className="cursor-pointer text-sm text-red-500 transition-colors hover:text-red-700 hover:underline">
             ออกจากระบบ

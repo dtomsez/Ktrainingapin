@@ -59,3 +59,11 @@ export async function requireAdmin(): Promise<number> {
   if (level === null) redirect("/admin/login");
   return level;
 }
+
+// ใช้ในหน้า/เส้นทางที่จำกัดเฉพาะผู้อนุมัติลำดับที่ 1 (Data Control / Log / ดาวน์โหลด Excel)
+export async function requireLevel1(): Promise<number> {
+  const level = await currentLevel();
+  if (level === null) redirect("/admin/login");
+  if (level !== 1) redirect("/admin");
+  return level;
+}
