@@ -78,40 +78,41 @@ export default async function DashboardPage({
     {
       label: `คำขอเดือน${monthOnly}`,
       icon: "📄",
-      iconBg: "from-sky-500 to-blue-600",
+      accent: "accent-sky",
       value: <CountUp value={monthReqs.length} />,
-      color: "text-slate-900",
     },
     {
       label: "รอการอนุมัติ",
       icon: "⏳",
-      iconBg: "from-amber-400 to-orange-500",
+      accent: "accent-amber",
       value: <CountUp value={monthPending} />,
-      color: "text-amber-600",
     },
     {
       label: "อนุมัติแล้ว / ปฏิเสธ",
       icon: "✅",
-      iconBg: "from-emerald-400 to-green-600",
+      accent: "accent-green",
       value: (
         <>
-          <span className="text-green-600">
+          <span className="text-emerald-600">
             <CountUp value={monthApproved} />
           </span>
           <span className="text-slate-300"> / </span>
-          <span className="text-red-500">
+          <span className="text-rose-500">
             <CountUp value={monthRejected} />
           </span>
         </>
       ),
-      color: "",
     },
     {
       label: `ชั่วโมงประชุม/อบรมเดือนนี้ (${summary.courses.length} หลักสูตร)`,
       icon: "⏱️",
-      iconBg: "from-sky-400 to-blue-600",
-      value: <CountUp value={summary.totalHours} suffix=" ชม." />,
-      color: "gradient-text",
+      accent: "accent-violet",
+      value: (
+        <>
+          <CountUp value={summary.totalHours} />
+          <span className="unit">ชม.</span>
+        </>
+      ),
     },
   ];
 
@@ -128,14 +129,10 @@ export default async function DashboardPage({
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((c, i) => (
-          <div key={c.label} className="card card-hover animate-fade-up flex items-center gap-4" style={{ animationDelay: `${0.08 + i * 0.08}s` }}>
-            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-xl shadow-lg ${c.iconBg}`}>
-              {c.icon}
-            </div>
-            <div>
-              <div className="text-xs text-slate-500">{c.label}</div>
-              <div className={`text-2xl font-bold ${c.color}`}>{c.value}</div>
-            </div>
+          <div key={c.label} className={`stat-tile animate-fade-up ${c.accent}`} style={{ animationDelay: `${0.08 + i * 0.08}s` }}>
+            <div className="stat-icon">{c.icon}</div>
+            <div className="stat-label">{c.label}</div>
+            <div className="stat-value">{c.value}</div>
           </div>
         ))}
       </div>

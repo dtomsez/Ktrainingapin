@@ -67,77 +67,22 @@ export default async function YearlyDashboardPage({
         <ViewToggle active="year" monthHref="/admin/dashboard" yearHref={`/admin/dashboard/yearly?y=${year}`} />
       </div>
 
-      {/* สรุปจำนวนคำขอทั้งปี: ทั้งหมด / อนุมัติ / ปฏิเสธ */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <div className="card card-hover animate-fade-up flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 text-xl shadow-lg">
-            📄
+      {/* สรุปภาพรวมทั้งปี */}
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {[
+          { label: `จำนวนคำขอทั้งหมด (ปี ${thaiYear})`, icon: "📄", accent: "accent-sky", value: <CountUp value={totalCount} suffix=" คำขอ" /> },
+          { label: "จำนวนอนุมัติ", icon: "✅", accent: "accent-green", value: <CountUp value={approvedCount} suffix=" คำขอ" /> },
+          { label: "จำนวนปฏิเสธ", icon: "❌", accent: "accent-rose", value: <CountUp value={rejectedCount} suffix=" คำขอ" /> },
+          { label: "หลักสูตรทั้งปี", icon: "📚", accent: "accent-violet", value: <CountUp value={yearCourseIds.size} suffix=" หลักสูตร" /> },
+          { label: "ชั่วโมงประชุม/อบรมทั้งปี", icon: "⏱️", accent: "accent-sky", value: (<><CountUp value={yearHours} /><span className="unit">ชม.</span></>) },
+          { label: "ตำแหน่งที่เข้าประชุม/อบรม", icon: "👥", accent: "accent-amber", value: <CountUp value={yearPositions.length} suffix=" ตำแหน่ง" /> },
+        ].map((c, i) => (
+          <div key={c.label} className={`stat-tile animate-fade-up ${c.accent}`} style={{ animationDelay: `${0.06 + i * 0.06}s` }}>
+            <div className="stat-icon">{c.icon}</div>
+            <div className="stat-label">{c.label}</div>
+            <div className="stat-value">{c.value}</div>
           </div>
-          <div>
-            <div className="text-xs text-slate-500">จำนวนคำขอทั้งหมด (ปี {thaiYear})</div>
-            <div className="text-2xl font-bold text-slate-900">
-              <CountUp value={totalCount} suffix=" คำขอ" />
-            </div>
-          </div>
-        </div>
-        <div className="card card-hover animate-fade-up delay-1 flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-green-600 text-xl shadow-lg">
-            ✅
-          </div>
-          <div>
-            <div className="text-xs text-slate-500">จำนวนอนุมัติ</div>
-            <div className="text-2xl font-bold text-green-600">
-              <CountUp value={approvedCount} suffix=" คำขอ" />
-            </div>
-          </div>
-        </div>
-        <div className="card card-hover animate-fade-up delay-2 flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-400 to-red-600 text-xl shadow-lg">
-            ❌
-          </div>
-          <div>
-            <div className="text-xs text-slate-500">จำนวนปฏิเสธ</div>
-            <div className="text-2xl font-bold text-red-500">
-              <CountUp value={rejectedCount} suffix=" คำขอ" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <div className="card card-hover animate-fade-up delay-1 flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 text-xl shadow-lg">
-            📚
-          </div>
-          <div>
-            <div className="text-xs text-slate-500">หลักสูตรทั้งปี</div>
-            <div className="text-2xl font-bold">
-              <CountUp value={yearCourseIds.size} suffix=" หลักสูตร" />
-            </div>
-          </div>
-        </div>
-        <div className="card card-hover animate-fade-up delay-2 flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 text-xl shadow-lg">
-            ⏱️
-          </div>
-          <div>
-            <div className="text-xs text-slate-500">ชั่วโมงประชุม/อบรมทั้งปี</div>
-            <div className="gradient-text text-2xl font-bold">
-              <CountUp value={yearHours} suffix=" ชม." />
-            </div>
-          </div>
-        </div>
-        <div className="card card-hover animate-fade-up delay-3 flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-green-600 text-xl shadow-lg">
-            👥
-          </div>
-          <div>
-            <div className="text-xs text-slate-500">ตำแหน่งที่เข้าประชุม/อบรม</div>
-            <div className="text-2xl font-bold text-green-600">
-              <CountUp value={yearPositions.length} suffix=" ตำแหน่ง" />
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
       {yearPositions.length > 0 && (

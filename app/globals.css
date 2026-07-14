@@ -353,6 +353,119 @@ body {
   @apply block cursor-pointer rounded-lg px-1.5 py-1 leading-tight transition-all duration-200 hover:z-10 hover:scale-[1.06] hover:shadow-lg;
 }
 
+/* ===== Stat tiles (การ์ดสถิติ Dashboard) ===== */
+.stat-tile {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  padding: 1.4rem 1.5rem;
+  background: linear-gradient(150deg, #ffffff 0%, #f7fbff 100%);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 16px 34px -22px color-mix(in srgb, var(--accent-2, #2563eb) 55%, transparent);
+  transition:
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.32s ease,
+    border-color 0.32s ease;
+}
+.stat-tile::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 120% at 100% 0%, color-mix(in srgb, var(--accent, #38bdf8) 20%, transparent) 0%, transparent 55%);
+  pointer-events: none;
+}
+.stat-tile::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--accent, #38bdf8), var(--accent-2, #2563eb));
+}
+.stat-tile:hover {
+  transform: translateY(-5px);
+  border-color: color-mix(in srgb, var(--accent, #38bdf8) 45%, #e2e8f0);
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, 0.05),
+    0 26px 48px -24px color-mix(in srgb, var(--accent-2, #2563eb) 70%, transparent);
+}
+.stat-icon {
+  position: absolute;
+  top: 1.05rem;
+  right: 1.05rem;
+  height: 2.9rem;
+  width: 2.9rem;
+  border-radius: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent, #38bdf8), var(--accent-2, #2563eb));
+  box-shadow:
+    0 8px 20px -6px color-mix(in srgb, var(--accent-2, #2563eb) 65%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.stat-label {
+  position: relative;
+  z-index: 1;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #64748b;
+  padding-right: 3.4rem;
+  margin-bottom: 0.5rem;
+  min-height: 2.2rem;
+}
+.stat-value {
+  position: relative;
+  z-index: 1;
+  font-size: 2.1rem;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--accent-ink, #0f172a);
+}
+.stat-value .unit {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-left: 0.2rem;
+}
+
+.accent-sky {
+  --accent: #38bdf8;
+  --accent-2: #2563eb;
+  --accent-ink: #0369a1;
+}
+.accent-amber {
+  --accent: #fbbf24;
+  --accent-2: #f97316;
+  --accent-ink: #b45309;
+}
+.accent-green {
+  --accent: #34d399;
+  --accent-2: #059669;
+  --accent-ink: #047857;
+}
+.accent-rose {
+  --accent: #fb7185;
+  --accent-2: #e11d48;
+  --accent-ink: #be123c;
+}
+.accent-violet {
+  --accent: #a78bfa;
+  --accent-2: #7c3aed;
+  --accent-ink: #6d28d9;
+}
+.accent-slate {
+  --accent: #94a3b8;
+  --accent-2: #475569;
+  --accent-ink: #334155;
+}
+
 /* ===== มาสคอตน้องนกกรุงไทย ===== */
 /* Watermark จาง ๆ มุมล่างขวา ทุกหน้า — ขอบภาพเฟดด้วย mask ให้กลืนพื้นหลัง */
 .mascot-watermark {
