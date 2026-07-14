@@ -433,7 +433,10 @@ export default function RequestForm({ options }: { options: FormOptions }) {
               กำลังส่งคำขอ...
             </>
           ) : (
-            <>🚀 ส่งคำขอจัดประชุม/อบรม</>
+            <>
+              <span className="mascot-badge h-6 w-6 shrink-0 rounded-full bg-white ring-2 ring-white/80" aria-hidden />
+              ส่งคำขอจัดประชุม/อบรม
+            </>
           )}
         </button>
       </div>
