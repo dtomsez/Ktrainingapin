@@ -218,15 +218,15 @@ export default function RequestForm({ options }: { options: FormOptions }) {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="field-label">รหัสพนักงาน *</label>
-            <input required className="field-input" value={form.employeeId} onChange={set("employeeId")} placeholder="เช่น EMP-00123" />
+            <input required className="field-input" value={form.employeeId} onChange={set("employeeId")} />
           </div>
           <div>
             <label className="field-label">ชื่อ-นามสกุล *</label>
-            <input required className="field-input" value={form.requesterName} onChange={set("requesterName")} placeholder="เช่น สมชาย ใจดี" />
+            <input required className="field-input" value={form.requesterName} onChange={set("requesterName")} />
           </div>
           <div>
             <label className="field-label">ตำแหน่ง *</label>
-            <input required className="field-input" value={form.position} onChange={set("position")} placeholder="เช่น เจ้าหน้าที่อาวุโส" />
+            <input required className="field-input" value={form.position} onChange={set("position")} />
           </div>
           <div>
             <label className="field-label">สังกัดสายงาน *</label>
@@ -285,7 +285,7 @@ export default function RequestForm({ options }: { options: FormOptions }) {
             <input required className="field-input" value={form.courseName} onChange={set("courseName")} placeholder="เช่น Excel ขั้นสูงสำหรับการวิเคราะห์ข้อมูล" />
           </div>
           <div>
-            <label className="field-label">ประเภท *</label>
+            <label className="field-label">รูปแบบการขอจัดประชุม / อบรม *</label>
             <div className="flex gap-3">
               {(
                 [
